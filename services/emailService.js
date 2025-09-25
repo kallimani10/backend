@@ -1,12 +1,15 @@
 const nodemailer = require('nodemailer');
 
-// Email configuration - using Outlook/Hotmail (easier setup than Gmail)
+// Email configuration - using Gmail with timeout settings
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com', // Replace with your Outlook email
-    pass: process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz'     // Your Outlook password (no App Password needed)
-  }
+    user: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com',
+    pass: process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz'
+  },
+  connectionTimeout: 60000, // 60 seconds
+  greetingTimeout: 30000,   // 30 seconds
+  socketTimeout: 60000      // 60 seconds
 });
 
 // Alternative Gmail configuration (if you want to try Gmail again)
@@ -107,7 +110,7 @@ const sendRegistrationEmail = async (registrationData) => {
     const emailUser = process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com';
     const emailPass = process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz';
     
-    if (!emailUser || emailPass === 'mpkk nuhi npld tgoz') {
+    if (!emailUser || !emailPass || emailPass === 'mpkk nuhi npld tgoz') {
       console.log('Email not configured - skipping email send');
       console.log('Registration details:', {
         name: registrationData.name,
