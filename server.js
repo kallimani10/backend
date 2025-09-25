@@ -15,7 +15,8 @@ app.use(cors({
     'http://localhost:3000',
     'http://localhost:5173',
     'http://localhost:4173',
-    'https://localhost:8080
+    'https://zerokostcourses.netlify.app',
+    'https://zerokostcourses.netlify.app/'
   ],
   credentials: true
 }));
