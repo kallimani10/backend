@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const config = require('../config');
+const { sendPaymentConfirmationViaWeb } = require('./webEmailService');
 
 // Email configuration with support for multiple providers
 const createTransporter = () => {
@@ -265,29 +266,32 @@ const createOptimizedGmailTransporter = () => {
 // Function to send payment confirmation email
 const sendPaymentConfirmationEmail = async (registrationData) => {
   try {
-    // Check if email is properly configured
-    if (!config.EMAIL_USER || !config.EMAIL_PASS) {
-      console.log('Email not configured - skipping payment confirmation email');
-      console.log('Payment confirmation details:', {
-        name: registrationData.name,
-        email: registrationData.email,
-        course: registrationData.courseTitle,
-        status: 'confirmed',
-        orderId: registrationData.orderId
-      });
-      return { success: true, messageId: 'email-disabled' };
+    console.log('Attempting to send payment confirmation email...');
+    
+    // First try Gmail SMTP
+    try {
+      const mailOptions = {
+        from: 'zerokosthealthcare@gmail.com',
+        to: registrationData.email,
+        subject: `🎉 Payment Confirmed - ${registrationData.courseTitle || registrationData.course}`,
+        html: createPaymentConfirmationEmailTemplate(registrationData)
+      };
+
+      const result = await sendEmailWithFallback(mailOptions);
+      console.log('Payment confirmation email sent successfully via Gmail:', result.messageId);
+      return { success: true, messageId: result.messageId, method: 'gmail' };
+    } catch (gmailError) {
+      console.log('Gmail failed, trying web service...', gmailError.message);
+      
+      // Fallback to web service
+      const webResult = await sendPaymentConfirmationViaWeb(registrationData);
+      if (webResult.success) {
+        console.log('Payment confirmation email sent successfully via web service:', webResult.messageId);
+        return { success: true, messageId: webResult.messageId, method: 'web-service' };
+      } else {
+        throw new Error('Both Gmail and web service failed');
+      }
     }
-
-    const mailOptions = {
-      from: config.EMAIL_FROM || config.EMAIL_USER,
-      to: registrationData.email,
-      subject: `🎉 Payment Confirmed - ${registrationData.courseTitle || registrationData.course}`,
-      html: createPaymentConfirmationEmailTemplate(registrationData)
-    };
-
-    const result = await sendEmailWithFallback(mailOptions);
-    console.log('Payment confirmation email sent successfully:', result.messageId);
-    return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error('Error sending payment confirmation email:', error);
     console.log('Payment confirmation details logged instead:', {

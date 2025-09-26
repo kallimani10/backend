@@ -7,6 +7,7 @@ const Registration = require('./models/Registration');
 const { sendPaymentConfirmationEmail } = require('./services/emailService');
 const { sendSimpleEmail, testEmail } = require('./services/simpleEmailService');
 const { sendSimpleGmailEmail, testGmailEmail } = require('./services/simpleGmailService');
+const { sendPaymentConfirmationViaWeb } = require('./services/webEmailService');
 
 const app = express();
 
@@ -219,6 +220,42 @@ app.post('/api/send-simple-email', async (req, res) => {
     console.error('Simple email error:', error);
     res.status(500).json({
       error: 'Simple email failed',
+      details: error.message
+    });
+  }
+});
+
+// Web service email endpoint (works around SMTP blocking)
+app.post('/api/send-web-email', async (req, res) => {
+  try {
+    const { email, name, course, orderId } = req.body;
+    
+    if (!email || !name || !course) {
+      return res.status(400).json({ error: 'Email, name, and course are required' });
+    }
+
+    const registrationData = {
+      name,
+      email,
+      course,
+      courseTitle: course,
+      orderId: orderId || 'web-test',
+      status: 'confirmed',
+      coursePrice: '₹9/-',
+      courseDuration: 'N/A'
+    };
+
+    console.log('Sending web email to:', email);
+    const result = await sendPaymentConfirmationViaWeb(registrationData);
+    
+    res.json({
+      message: 'Web email sent',
+      result: result
+    });
+  } catch (error) {
+    console.error('Web email error:', error);
+    res.status(500).json({
+      error: 'Web email failed',
       details: error.message
     });
   }
