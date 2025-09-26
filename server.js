@@ -183,9 +183,25 @@ app.post('/api/webhook/cashfree', async (req, res) => {
             console.log('Payment confirmation email sent successfully');
           } else {
             console.log('Failed to send payment confirmation email:', emailResult.error);
+            // Log the details for manual follow-up if needed
+            console.log('Payment confirmation details logged instead:', {
+              name: updatedRegistration.name,
+              email: updatedRegistration.email,
+              course: updatedRegistration.courseTitle,
+              status: 'confirmed',
+              orderId: updatedRegistration.orderId
+            });
           }
         } catch (emailError) {
           console.error('Payment confirmation email error:', emailError);
+          // Log the details for manual follow-up if needed
+          console.log('Payment confirmation details logged instead:', {
+            name: updatedRegistration.name,
+            email: updatedRegistration.email,
+            course: updatedRegistration.courseTitle,
+            status: 'confirmed',
+            orderId: updatedRegistration.orderId
+          });
         }
       }
     }
@@ -238,9 +254,25 @@ app.post('/api/check-payment-status', async (req, res) => {
             console.log('Payment confirmation email sent successfully');
           } else {
             console.log('Failed to send payment confirmation email:', emailResult.error);
+            // Log the details for manual follow-up if needed
+            console.log('Payment confirmation details logged instead:', {
+              name: updatedRegistration.name,
+              email: updatedRegistration.email,
+              course: updatedRegistration.courseTitle,
+              status: 'confirmed',
+              orderId: updatedRegistration.orderId
+            });
           }
         } catch (emailError) {
           console.error('Payment confirmation email error:', emailError);
+          // Log the details for manual follow-up if needed
+          console.log('Payment confirmation details logged instead:', {
+            name: updatedRegistration.name,
+            email: updatedRegistration.email,
+            course: updatedRegistration.courseTitle,
+            status: 'confirmed',
+            orderId: updatedRegistration.orderId
+          });
         }
       }
     }

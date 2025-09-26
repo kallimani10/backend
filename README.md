@@ -60,3 +60,4 @@ This backend is configured for deployment on Render.com:
 2. Build Command: `npm install`
 3. Start Command: `npm start`
 4. Add all environment variables in Render dashboard
+

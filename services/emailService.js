@@ -1,16 +1,23 @@
 const nodemailer = require('nodemailer');
 
-// Email configuration - using Gmail with timeout settings
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com',
-    pass: process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz'
-  },
-  connectionTimeout: 60000, // 60 seconds
-  greetingTimeout: 30000,   // 30 seconds
-  socketTimeout: 60000      // 60 seconds
-});
+// Email configuration with improved timeout and retry settings
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com',
+      pass: process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz'
+    },
+    connectionTimeout: 30000,  // 30 seconds (reduced from 60)
+    greetingTimeout: 15000,    // 15 seconds (reduced from 30)
+    socketTimeout: 30000,      // 30 seconds (reduced from 60)
+    pool: true,                // Use connection pooling
+    maxConnections: 1,         // Limit concurrent connections
+    maxMessages: 3,            // Max messages per connection
+    rateDelta: 20000,          // Rate limiting
+    rateLimit: 5               // Max 5 emails per rateDelta
+  });
+};
 
 // Alternative Gmail configuration (if you want to try Gmail again)
 // const transporter = nodemailer.createTransport({
@@ -103,6 +110,31 @@ const createRegistrationEmailTemplate = (registrationData) => {
   `;
 };
 
+// Retry mechanism for email sending
+const sendEmailWithRetry = async (mailOptions, maxRetries = 3) => {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const transporter = createTransporter();
+      const result = await transporter.sendMail(mailOptions);
+      await transporter.close(); // Close the connection
+      return { success: true, messageId: result.messageId };
+    } catch (error) {
+      lastError = error;
+      console.log(`Email send attempt ${attempt} failed:`, error.message);
+      
+      if (attempt < maxRetries) {
+        const delay = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError;
+};
+
 // Function to send registration confirmation email
 const sendRegistrationEmail = async (registrationData) => {
   try {
@@ -110,7 +142,7 @@ const sendRegistrationEmail = async (registrationData) => {
     const emailUser = process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com';
     const emailPass = process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz';
     
-    if (!emailUser || !emailPass || emailPass === 'mpkk nuhi npld tgoz') {
+    if (!emailUser || !emailPass || emailPass === 'mpkk nuhi npld tgoz' || emailPass === 'your-16-digit-app-password') {
       console.log('Email not configured - skipping email send');
       console.log('Registration details:', {
         name: registrationData.name,
@@ -128,7 +160,7 @@ const sendRegistrationEmail = async (registrationData) => {
       html: createRegistrationEmailTemplate(registrationData)
     };
 
-    const result = await transporter.sendMail(mailOptions);
+    const result = await sendEmailWithRetry(mailOptions);
     console.log('Registration email sent successfully:', result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
@@ -150,7 +182,7 @@ const sendPaymentConfirmationEmail = async (registrationData) => {
     const emailUser = process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com';
     const emailPass = process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz';
     
-    if (!emailUser || emailPass === 'your-16-digit-app-password') {
+    if (!emailUser || !emailPass || emailPass === 'mpkk nuhi npld tgoz' || emailPass === 'your-16-digit-app-password') {
       console.log('Email not configured - skipping payment confirmation email');
       console.log('Payment confirmation details:', {
         name: registrationData.name,
@@ -169,7 +201,7 @@ const sendPaymentConfirmationEmail = async (registrationData) => {
       html: createRegistrationEmailTemplate({ ...registrationData, status: 'confirmed' })
     };
 
-    const result = await transporter.sendMail(mailOptions);
+    const result = await sendEmailWithRetry(mailOptions);
     console.log('Payment confirmation email sent successfully:', result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {

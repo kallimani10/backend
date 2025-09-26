@@ -57,3 +57,4 @@ After backend is deployed, update your frontend:
 - **Module not found**: Ensure package.json is in server directory
 - **CORS errors**: Update CLIENT_ORIGIN environment variable
 - **Database connection**: Verify MONGODB_URI is correct
+
