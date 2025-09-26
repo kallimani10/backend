@@ -115,56 +115,18 @@ const sendEmail = async (to, subject, html) => {
   }
 };
 
-// Payment confirmation email template
+// Payment confirmation email template (small and fast)
 const createPaymentConfirmationTemplate = (name, course, orderId) => {
   return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Payment Confirmed</title>
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-            .success-icon { font-size: 48px; margin-bottom: 20px; }
-            .course-info { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
-            .payment-info { background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #28a745; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <div class="success-icon">🎉</div>
-                <h1>Payment Confirmed!</h1>
-                <p>Your course registration is complete</p>
-            </div>
-            <div class="content">
-                <h2>Hello ${name}!</h2>
-                <p><strong>🎉 Congratulations!</strong> Your payment has been processed successfully.</p>
-                
-                <div class="course-info">
-                    <h3>📚 Course Details</h3>
-                    <p><strong>Course:</strong> ${course}</p>
-                    <p><strong>Price Paid:</strong> ₹9/-</p>
-                    <p><strong>Status:</strong> ✅ Payment Confirmed</p>
-                </div>
-                
-                <div class="payment-info">
-                    <h3>💳 Payment Information</h3>
-                    <p><strong>Order ID:</strong> ${orderId}</p>
-                    <p><strong>Payment Status:</strong> ✅ Successfully Processed</p>
-                    <p><strong>Payment Date:</strong> ${new Date().toLocaleDateString()}</p>
-                </div>
-                
-                <p>Thank you for choosing our course! You will receive course access details within 24 hours.</p>
-                
-                <p><strong>Best regards,<br>Course Registration Team</strong></p>
-            </div>
-        </div>
-    </body>
-    </html>
+    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #28a745;">🎉 Payment Confirmed!</h2>
+      <p>Hello ${name}!</p>
+      <p><strong>Course:</strong> ${course}</p>
+      <p><strong>Order ID:</strong> ${orderId}</p>
+      <p><strong>Status:</strong> ✅ Payment Confirmed</p>
+      <p>Thank you! Course details will be sent within 24 hours.</p>
+      <p><strong>Course Registration Team</strong></p>
+    </div>
   `;
 };
 
@@ -176,40 +138,16 @@ const sendPaymentConfirmation = async (email, name, course, orderId) => {
   return await sendEmail(email, subject, html);
 };
 
-// Test email function
+// Test email function (small and fast)
 const sendTestEmail = async (email = 'vaibhavbkalungada@gmail.com') => {
   const subject = '📧 Email Test - Success!';
   const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Email Test</title>
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-            .success-icon { font-size: 48px; margin-bottom: 20px; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <div class="success-icon">📧</div>
-                <h1>Email Test Successful!</h1>
-                <p>Your email system is working</p>
-            </div>
-            <div class="content">
-                <h2>Test Details:</h2>
-                <p><strong>Test Time:</strong> ${new Date().toISOString()}</p>
-                <p><strong>Email Service:</strong> Gmail SMTP</p>
-                <p><strong>Status:</strong> ✅ Working</p>
-                <p>This confirms that your email system is properly configured and ready to send payment confirmation emails.</p>
-            </div>
-        </div>
-    </body>
-    </html>
+    <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #28a745;">📧 Email Test Successful!</h2>
+      <p><strong>Test Time:</strong> ${new Date().toISOString()}</p>
+      <p><strong>Status:</strong> ✅ Working</p>
+      <p>Email system is ready!</p>
+    </div>
   `;
   
   return await sendEmail(email, subject, html);
