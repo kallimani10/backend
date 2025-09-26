@@ -58,6 +58,42 @@ app.get('/api/test-email', async (req, res) => {
   }
 });
 
+// Manual email sending endpoint for testing
+app.post('/api/send-manual-email', async (req, res) => {
+  try {
+    const { email, name, course, orderId } = req.body;
+    
+    if (!email || !name || !course) {
+      return res.status(400).json({ error: 'Email, name, and course are required' });
+    }
+
+    const registrationData = {
+      name,
+      email,
+      course,
+      courseTitle: course,
+      orderId: orderId || 'manual-test',
+      status: 'confirmed',
+      coursePrice: '₹9/-',
+      courseDuration: 'N/A'
+    };
+
+    console.log('Sending manual email to:', email);
+    const result = await sendPaymentConfirmationEmail(registrationData);
+    
+    res.json({
+      message: 'Manual email sent',
+      result: result
+    });
+  } catch (error) {
+    console.error('Manual email error:', error);
+    res.status(500).json({
+      error: 'Manual email failed',
+      details: error.message
+    });
+  }
+});
+
 // Submit registration form
 app.post('/api/register', async (req, res) => {
   try {

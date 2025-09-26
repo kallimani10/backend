@@ -71,18 +71,23 @@ const createTransporter = () => {
   return nodemailer.createTransport(transporterConfig);
 };
 
-// SendGrid transporter (alternative to SMTP)
+// SendGrid transporter (production-ready)
 const createSendGridTransporter = () => {
   if (!config.SENDGRID_API_KEY) {
     throw new Error('SendGrid API key not configured');
   }
   
   return nodemailer.createTransport({
-    service: 'SendGrid',
+    host: 'smtp.sendgrid.net',
+    port: 587,
+    secure: false,
     auth: {
       user: 'apikey',
       pass: config.SENDGRID_API_KEY
-    }
+    },
+    connectionTimeout: 10000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000
   });
 };
 
@@ -198,8 +203,23 @@ const createPaymentConfirmationEmailTemplate = (registrationData) => {
   `;
 };
 
-// Fast email sending with multiple fallback services
+// Production-ready email sending with SendGrid as primary
 const sendEmailWithFallback = async (mailOptions, maxRetries = 2) => {
+  // Try SendGrid first (best for production)
+  if (config.SENDGRID_API_KEY) {
+    try {
+      console.log('Trying email service: sendgrid');
+      const transporter = createTransporterForService('sendgrid');
+      const result = await transporter.sendMail(mailOptions);
+      await transporter.close();
+      console.log('Email sent successfully using SendGrid');
+      return { success: true, messageId: result.messageId, service: 'sendgrid' };
+    } catch (error) {
+      console.log('SendGrid failed:', error.message);
+    }
+  }
+  
+  // Fallback to SMTP services
   const emailServices = ['gmail', 'outlook', 'custom'];
   let lastError;
   
