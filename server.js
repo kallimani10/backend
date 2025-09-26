@@ -5,6 +5,7 @@ const axios = require('axios');
 const config = require('./config');
 const Registration = require('./models/Registration');
 const { sendEmail, sendPaymentConfirmation, sendTestEmail } = require('./services/emailService');
+const { sendPaymentConfirmation: sendSimplePaymentConfirmation } = require('./services/simpleEmailService');
 
 const app = express();
 
@@ -76,6 +77,31 @@ app.post('/api/send-email', async (req, res) => {
     console.error('Email error:', error);
     res.status(500).json({
       error: 'Email failed',
+      details: error.message
+    });
+  }
+});
+
+// Send email via simple service (bypasses SMTP blocking)
+app.post('/api/send-simple-email', async (req, res) => {
+  try {
+    const { email, name, course, orderId } = req.body;
+    
+    if (!email || !name || !course) {
+      return res.status(400).json({ error: 'Email, name, and course are required' });
+    }
+
+    console.log('Sending email via simple service to:', email);
+    const result = await sendSimplePaymentConfirmation(email, name, course, orderId);
+    
+    res.json({
+      message: 'Simple email sent',
+      result: result
+    });
+  } catch (error) {
+    console.error('Simple email error:', error);
+    res.status(500).json({
+      error: 'Simple email failed',
       details: error.message
     });
   }
