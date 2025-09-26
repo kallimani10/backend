@@ -1,63 +1,48 @@
-# Course Registration Backend API
+# 🎯 Clean Gmail Email System
 
-A Node.js/Express backend for course registration with payment processing.
+## 📧 **Simple Gmail-Only Email Service**
 
-## Features
+This is a clean, simple email system that uses only Gmail for sending emails.
 
-- Course registration with MongoDB storage
-- Cashfree payment gateway integration
-- Email notifications (registration & payment confirmation)
-- RESTful API endpoints
-- CORS enabled for frontend integration
+### **Files:**
+- `services/gmailService.js` - Clean Gmail email service
+- `server.js` - Clean server with essential endpoints only
 
-## API Endpoints
+### **Gmail Configuration:**
+- **Email**: `zerokosthealthcare@gmail.com`
+- **App Password**: `mpkk nuhi npld tgoz`
 
-- `POST /api/register` - Register for a course
-- `POST /api/create-order` - Create payment order
-- `GET /api/order-status/:order_id` - Check payment status
-- `POST /api/check-payment-status` - Manual payment status check
-- `POST /api/webhook/cashfree` - Cashfree webhook handler
+### **Endpoints:**
 
-## Environment Variables
-
-Create a `.env` file with the following variables:
-
-```env
-MONGODB_URI=your_mongodb_connection_string
-PORT=5000
-CASHFREE_APP_ID=your_cashfree_app_id
-CASHFREE_SECRET_KEY=your_cashfree_secret_key
-CASHFREE_API_VERSION=2023-08-01
-CASHFREE_BASE=https://sandbox.cashfree.com/pg
-CLIENT_ORIGIN=http://localhost:3000
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
-```
-
-## Installation
-
+#### **Test Email:**
 ```bash
-npm install
+GET /api/test-email
 ```
 
-## Development
-
+#### **Send Payment Confirmation:**
 ```bash
-npm run dev
+POST /api/send-email
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "name": "User Name",
+  "course": "Course Name",
+  "orderId": "order_123"
+}
 ```
 
-## Production
+### **Features:**
+- ✅ Gmail-only email sending
+- ✅ Professional HTML email templates
+- ✅ Payment confirmation emails
+- ✅ Clean, simple code
+- ✅ No unnecessary files
 
-```bash
-npm start
-```
+### **How It Works:**
+1. User registers and pays
+2. Payment is confirmed
+3. Gmail sends confirmation email
+4. User receives professional email
 
-## Deployment
-
-This backend is configured for deployment on Render.com:
-
-1. Set Root Directory to `server`
-2. Build Command: `npm install`
-3. Start Command: `npm start`
-4. Add all environment variables in Render dashboard
-
+**Simple and clean! 🚀**

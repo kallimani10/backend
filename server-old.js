@@ -16,6 +16,7 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:4173',
     'https://zerokostcourses.netlify.app',
+    
   ],
   credentials: true
 }));
@@ -38,11 +39,11 @@ app.get('/', (req, res) => {
   res.json({ message: 'Course Registration API is running!' });
 });
 
-// Test Gmail email endpoint
+// Test email endpoint
 app.get('/api/test-email', async (req, res) => {
   try {
-    console.log('Testing Gmail email...');
-    const result = await sendTestEmail('vaibhavbkalungada@gmail.com');
+    console.log('Testing Gmail email functionality...');
+    const result = await testEmail();
     res.json({ 
       message: 'Gmail email test completed',
       result: result
@@ -56,8 +57,71 @@ app.get('/api/test-email', async (req, res) => {
   }
 });
 
-// Send payment confirmation email endpoint
-app.post('/api/send-email', async (req, res) => {
+// Simple Gmail test endpoint
+app.get('/api/test-simple-gmail', async (req, res) => {
+  try {
+    console.log('Testing simple Gmail email...');
+    const result = await testGmailEmail();
+    res.json({ 
+      message: 'Simple Gmail test completed',
+      result: result
+    });
+  } catch (error) {
+    console.error('Simple Gmail test error:', error);
+    res.status(500).json({ 
+      error: 'Simple Gmail test failed',
+      details: error.message
+    });
+  }
+});
+
+// Gmail connection test endpoint
+app.get('/api/test-gmail', async (req, res) => {
+  try {
+    console.log('Testing Gmail connection...');
+    
+    // Test Gmail connection with simple configuration
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'nareshkallimani09@gmail.com',
+        pass: 'zwat ekzv fxnj lczy'
+      },
+      connectionTimeout: 20000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
+      pool: false,
+      maxConnections: 1,
+      maxMessages: 1
+    });
+
+    console.log('Gmail transporter created, verifying connection...');
+    
+    // Verify connection
+    const verified = await transporter.verify();
+    console.log('Gmail connection verified:', verified);
+    
+    await transporter.close();
+    console.log('Gmail connection closed');
+    
+    res.json({ 
+      message: 'Gmail connection successful',
+      status: 'connected',
+      verified: verified
+    });
+  } catch (error) {
+    console.error('Gmail connection test error:', error);
+    res.status(500).json({ 
+      error: 'Gmail connection failed',
+      details: error.message,
+      code: error.code
+    });
+  }
+});
+
+// Manual email sending endpoint for testing
+app.post('/api/send-manual-email', async (req, res) => {
   try {
     const { email, name, course, orderId } = req.body;
     
@@ -65,17 +129,130 @@ app.post('/api/send-email', async (req, res) => {
       return res.status(400).json({ error: 'Email, name, and course are required' });
     }
 
-    console.log('Sending payment confirmation email to:', email);
-    const result = await sendPaymentConfirmation(email, name, course, orderId);
+    const registrationData = {
+      name,
+      email,
+      course,
+      courseTitle: course,
+      orderId: orderId || 'manual-test',
+      status: 'confirmed',
+      coursePrice: '₹9/-',
+      courseDuration: 'N/A'
+    };
+
+    console.log('Sending manual email to:', email);
+    const result = await sendPaymentConfirmationEmail(registrationData);
     
     res.json({
-      message: 'Payment confirmation email sent',
+      message: 'Manual email sent',
       result: result
     });
   } catch (error) {
-    console.error('Email error:', error);
+    console.error('Manual email error:', error);
     res.status(500).json({
-      error: 'Email failed',
+      error: 'Manual email failed',
+      details: error.message
+    });
+  }
+});
+
+// Simple manual email endpoint using simple Gmail service
+app.post('/api/send-simple-email', async (req, res) => {
+  try {
+    const { email, name, course, orderId } = req.body;
+    
+    if (!email || !name || !course) {
+      return res.status(400).json({ error: 'Email, name, and course are required' });
+    }
+
+    const subject = `🎉 Payment Confirmed - ${course}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="utf-8">
+          <title>Payment Confirmed</title>
+          <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+              .success-icon { font-size: 48px; margin-bottom: 20px; }
+          </style>
+      </head>
+      <body>
+          <div class="container">
+              <div class="header">
+                  <div class="success-icon">🎉</div>
+                  <h1>Payment Confirmed!</h1>
+                  <p>Your course registration is complete</p>
+              </div>
+              <div class="content">
+                  <h2>Hello ${name}!</h2>
+                  <p><strong>🎉 Congratulations!</strong> Your payment has been processed successfully.</p>
+                  
+                  <h3>📚 Course Details:</h3>
+                  <p><strong>Course:</strong> ${course}</p>
+                  <p><strong>Price Paid:</strong> ₹9/-</p>
+                  <p><strong>Order ID:</strong> ${orderId || 'N/A'}</p>
+                  <p><strong>Status:</strong> ✅ Payment Confirmed</p>
+                  
+                  <p>Thank you for choosing our course! You will receive course access details soon.</p>
+                  
+                  <p><strong>Best regards,<br>Course Registration Team</strong></p>
+              </div>
+          </div>
+      </body>
+      </html>
+    `;
+
+    console.log('Sending simple email to:', email);
+    const result = await sendSimpleGmailEmail(email, subject, html);
+    
+    res.json({
+      message: 'Simple email sent',
+      result: result
+    });
+  } catch (error) {
+    console.error('Simple email error:', error);
+    res.status(500).json({
+      error: 'Simple email failed',
+      details: error.message
+    });
+  }
+});
+
+// Web service email endpoint (works around SMTP blocking)
+app.post('/api/send-web-email', async (req, res) => {
+  try {
+    const { email, name, course, orderId } = req.body;
+    
+    if (!email || !name || !course) {
+      return res.status(400).json({ error: 'Email, name, and course are required' });
+    }
+
+    const registrationData = {
+      name,
+      email,
+      course,
+      courseTitle: course,
+      orderId: orderId || 'web-test',
+      status: 'confirmed',
+      coursePrice: '₹9/-',
+      courseDuration: 'N/A'
+    };
+
+    console.log('Sending web email to:', email);
+    const result = await sendPaymentConfirmationViaWeb(registrationData);
+    
+    res.json({
+      message: 'Web email sent',
+      result: result
+    });
+  } catch (error) {
+    console.error('Web email error:', error);
+    res.status(500).json({
+      error: 'Web email failed',
       details: error.message
     });
   }
@@ -212,19 +389,30 @@ app.post('/api/webhook/cashfree', async (req, res) => {
       if (updatedRegistration) {
         setImmediate(async () => {
           try {
-            const emailResult = await sendPaymentConfirmation(
-              updatedRegistration.email,
-              updatedRegistration.name,
-              updatedRegistration.courseTitle || updatedRegistration.course,
-              updatedRegistration.orderId
-            );
+            const emailResult = await sendPaymentConfirmationEmail(updatedRegistration);
             if (emailResult.success) {
               console.log('Payment confirmation email sent successfully');
             } else {
               console.log('Failed to send payment confirmation email:', emailResult.error);
+              // Log the details for manual follow-up if needed
+              console.log('Payment confirmation details logged instead:', {
+                name: updatedRegistration.name,
+                email: updatedRegistration.email,
+                course: updatedRegistration.courseTitle,
+                status: 'confirmed',
+                orderId: updatedRegistration.orderId
+              });
             }
           } catch (emailError) {
             console.error('Payment confirmation email error:', emailError);
+            // Log the details for manual follow-up if needed
+            console.log('Payment confirmation details logged instead:', {
+              name: updatedRegistration.name,
+              email: updatedRegistration.email,
+              course: updatedRegistration.courseTitle,
+              status: 'confirmed',
+              orderId: updatedRegistration.orderId
+            });
           }
         });
       }
@@ -274,19 +462,30 @@ app.post('/api/check-payment-status', async (req, res) => {
       if (updatedRegistration) {
         setImmediate(async () => {
           try {
-            const emailResult = await sendPaymentConfirmation(
-              updatedRegistration.email,
-              updatedRegistration.name,
-              updatedRegistration.courseTitle || updatedRegistration.course,
-              updatedRegistration.orderId
-            );
+            const emailResult = await sendPaymentConfirmationEmail(updatedRegistration);
             if (emailResult.success) {
               console.log('Payment confirmation email sent successfully');
             } else {
               console.log('Failed to send payment confirmation email:', emailResult.error);
+              // Log the details for manual follow-up if needed
+              console.log('Payment confirmation details logged instead:', {
+                name: updatedRegistration.name,
+                email: updatedRegistration.email,
+                course: updatedRegistration.courseTitle,
+                status: 'confirmed',
+                orderId: updatedRegistration.orderId
+              });
             }
           } catch (emailError) {
             console.error('Payment confirmation email error:', emailError);
+            // Log the details for manual follow-up if needed
+            console.log('Payment confirmation details logged instead:', {
+              name: updatedRegistration.name,
+              email: updatedRegistration.email,
+              course: updatedRegistration.courseTitle,
+              status: 'confirmed',
+              orderId: updatedRegistration.orderId
+            });
           }
         });
       }
