@@ -11,8 +11,8 @@ const sendSimpleGmailEmail = async (to, subject, html) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'zerokosthealthcare@gmail.com',
-        pass: 'mpkk nuhi npld tgoz'
+        user: 'nareshkallimani09@gmail.com',
+        pass: 'zwat ekzv fxnj lczy'
       },
       connectionTimeout: 20000,
       greetingTimeout: 15000,
@@ -22,7 +22,7 @@ const sendSimpleGmailEmail = async (to, subject, html) => {
     console.log('Gmail transporter created');
 
     const mailOptions = {
-      from: 'zerokosthealthcare@gmail.com',
+      from: 'nareshkallimani09@gmail.com',
       to: to,
       subject: subject,
       html: html

@@ -10,8 +10,8 @@ module.exports = {
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
   
   // Email Configuration - Gmail Only
-  EMAIL_USER: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com',
-  EMAIL_PASS: process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz',
+  EMAIL_USER: process.env.EMAIL_USER || 'nareshkallimani09@gmail.com',
+  EMAIL_PASS: process.env.EMAIL_PASS || 'zwat ekzv fxnj lczy',
   
   // Alternative Email Services
   EMAIL_HOST: process.env.EMAIL_HOST || null,

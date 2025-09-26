@@ -88,8 +88,8 @@ app.get('/api/test-gmail', async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'zerokosthealthcare@gmail.com',
-        pass: 'mpkk nuhi npld tgoz'
+        user: 'nareshkallimani09@gmail.com',
+        pass: 'zwat ekzv fxnj lczy'
       },
       connectionTimeout: 20000,
       greetingTimeout: 15000,

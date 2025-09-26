@@ -27,8 +27,8 @@ CASHFREE_SECRET_KEY=cfsk_ma_test_055a585aa73adc293efd874e702cd10c_23aa53e9
 CASHFREE_API_VERSION=2023-08-01
 CASHFREE_BASE=https://sandbox.cashfree.com/pg
 CLIENT_ORIGIN=http://localhost:3000
-EMAIL_USER=zerokosthealthcare@gmail.com
-EMAIL_PASS=mpkk nuhi npld tgoz
+EMAIL_USER=nareshkallimani09@gmail.com
+EMAIL_PASS=zwat ekzv fxnj lczy
 ```
 
 ## Step 3: Deploy

@@ -8,7 +8,7 @@
 ## 🔧 **Gmail Setup Steps:**
 
 ### **Step 1: Verify Gmail App Password**
-The current App Password is: `mpkk nuhi npld tgoz`
+The current App Password is: `zwat ekzv fxnj lczy`
 
 **To verify/regenerate:**
 1. Go to [Google Account Settings](https://myaccount.google.com/)
@@ -127,8 +127,8 @@ POST /api/send-manual-email
 
 ```javascript
 // Gmail Configuration
-EMAIL_USER: 'zerokosthealthcare@gmail.com'
-EMAIL_PASS: 'mpkk nuhi npld tgoz'  // App Password
+EMAIL_USER: 'nareshkallimani09@gmail.com'
+EMAIL_PASS: 'zwat ekzv fxnj lczy'  // App Password
 ```
 
 ## 🎯 **Next Steps:**

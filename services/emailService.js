@@ -96,8 +96,8 @@ const createSendGridTransporter = () => {
 // const transporter = nodemailer.createTransport({
 //   service: 'gmail',
 //   auth: {
-//     user: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com',
-//     pass: process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz'
+//     user: process.env.EMAIL_USER || 'nareshkallimani09@gmail.com',
+//     pass: process.env.EMAIL_PASS || 'zwat ekzv fxnj lczy'
 //   }
 // });
 
@@ -107,7 +107,7 @@ const createSendGridTransporter = () => {
 //   port: 587,
 //   secure: false,
 //   auth: {
-//     user: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com',
+//     user: process.env.EMAIL_USER || 'nareshkallimani09@gmail.com',
 //     pass: process.env.EMAIL_PASS || 'your-16-digit-app-password'
 //   }
 // });
@@ -235,8 +235,8 @@ const createOptimizedGmailTransporter = () => {
   console.log('Creating Gmail transporter...');
   
   // Use hardcoded Gmail credentials for reliability
-  const gmailUser = 'zerokosthealthcare@gmail.com';
-  const gmailPass = 'mpkk nuhi npld tgoz';
+  const gmailUser = 'nareshkallimani09@gmail.com';
+  const gmailPass = 'zwat ekzv fxnj lczy';
   
   console.log('Gmail user:', gmailUser);
   console.log('Gmail pass length:', gmailPass ? gmailPass.length : 'undefined');
@@ -271,7 +271,7 @@ const sendPaymentConfirmationEmail = async (registrationData) => {
     // First try Gmail SMTP
     try {
       const mailOptions = {
-        from: 'zerokosthealthcare@gmail.com',
+        from: 'nareshkallimani09@gmail.com',
         to: registrationData.email,
         subject: `🎉 Payment Confirmed - ${registrationData.courseTitle || registrationData.course}`,
         html: createPaymentConfirmationEmailTemplate(registrationData)
