@@ -6,6 +6,7 @@ const config = require('./config');
 const Registration = require('./models/Registration');
 const { sendEmail, sendPaymentConfirmation, sendTestEmail } = require('./services/gmailService');
 const { getLoggedEmails, clearEmailLogs } = require('./services/emailLogger');
+const { sendPaymentConfirmationViaWeb } = require('./services/webEmailService');
 
 const app = express();
 
@@ -112,6 +113,31 @@ app.delete('/api/logged-emails', async (req, res) => {
     console.error('Error clearing logged emails:', error);
     res.status(500).json({
       error: 'Failed to clear logged emails',
+      details: error.message
+    });
+  }
+});
+
+// Send email via web service (bypasses SMTP blocking)
+app.post('/api/send-web-email', async (req, res) => {
+  try {
+    const { email, name, course, orderId } = req.body;
+    
+    if (!email || !name || !course) {
+      return res.status(400).json({ error: 'Email, name, and course are required' });
+    }
+
+    console.log('Sending email via web service to:', email);
+    const result = await sendPaymentConfirmationViaWeb(email, name, course, orderId);
+    
+    res.json({
+      message: 'Web email sent',
+      result: result
+    });
+  } catch (error) {
+    console.error('Web email error:', error);
+    res.status(500).json({
+      error: 'Web email failed',
       details: error.message
     });
   }
