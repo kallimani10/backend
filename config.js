@@ -8,6 +8,20 @@ module.exports = {
   CASHFREE_API_VERSION: process.env.CASHFREE_API_VERSION || '2023-08-01',
   CASHFREE_BASE: process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg',
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
-  EMAIL_USER: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com',
-  EMAIL_PASS: process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz'
+  
+  // Email Configuration - Multiple Options
+  EMAIL_USER: process.env.EMAIL_USER || null,
+  EMAIL_PASS: process.env.EMAIL_PASS || null,
+  
+  // Alternative Email Services
+  EMAIL_HOST: process.env.EMAIL_HOST || null,
+  EMAIL_PORT: process.env.EMAIL_PORT || 587,
+  EMAIL_SECURE: process.env.EMAIL_SECURE === 'true' || false,
+  
+  // SendGrid Configuration
+  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || null,
+  EMAIL_FROM: process.env.EMAIL_FROM || null,
+  
+  // Email Service Selection
+  EMAIL_SERVICE: process.env.EMAIL_SERVICE || 'gmail' // gmail, outlook, custom, sendgrid
 };

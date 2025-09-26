@@ -1,21 +1,88 @@
 const nodemailer = require('nodemailer');
+const config = require('../config');
 
-// Email configuration with improved timeout and retry settings
+// Email configuration with support for multiple providers
 const createTransporter = () => {
+  const emailService = config.EMAIL_SERVICE || 'gmail';
+  
+  // Check if email is configured
+  if (!config.EMAIL_USER || !config.EMAIL_PASS) {
+    throw new Error('Email not configured. Please set EMAIL_USER and EMAIL_PASS environment variables.');
+  }
+
+  let transporterConfig;
+
+  switch (emailService.toLowerCase()) {
+    case 'gmail':
+      transporterConfig = {
+        service: 'gmail',
+        auth: {
+          user: config.EMAIL_USER,
+          pass: config.EMAIL_PASS
+        },
+        connectionTimeout: 30000,
+        greetingTimeout: 15000,
+        socketTimeout: 30000,
+        pool: true,
+        maxConnections: 1,
+        maxMessages: 3,
+        rateDelta: 20000,
+        rateLimit: 5
+      };
+      break;
+
+    case 'outlook':
+    case 'hotmail':
+      transporterConfig = {
+        service: 'hotmail',
+        auth: {
+          user: config.EMAIL_USER,
+          pass: config.EMAIL_PASS
+        },
+        connectionTimeout: 30000,
+        greetingTimeout: 15000,
+        socketTimeout: 30000
+      };
+      break;
+
+    case 'custom':
+      transporterConfig = {
+        host: config.EMAIL_HOST,
+        port: config.EMAIL_PORT,
+        secure: config.EMAIL_SECURE,
+        auth: {
+          user: config.EMAIL_USER,
+          pass: config.EMAIL_PASS
+        },
+        connectionTimeout: 30000,
+        greetingTimeout: 15000,
+        socketTimeout: 30000
+      };
+      break;
+
+    case 'sendgrid':
+      // SendGrid uses different configuration
+      return createSendGridTransporter();
+
+    default:
+      throw new Error(`Unsupported email service: ${emailService}`);
+  }
+
+  return nodemailer.createTransport(transporterConfig);
+};
+
+// SendGrid transporter (alternative to SMTP)
+const createSendGridTransporter = () => {
+  if (!config.SENDGRID_API_KEY) {
+    throw new Error('SendGrid API key not configured');
+  }
+  
   return nodemailer.createTransport({
-    service: 'gmail',
+    service: 'SendGrid',
     auth: {
-      user: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com',
-      pass: process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz'
-    },
-    connectionTimeout: 30000,  // 30 seconds (reduced from 60)
-    greetingTimeout: 15000,    // 15 seconds (reduced from 30)
-    socketTimeout: 30000,      // 30 seconds (reduced from 60)
-    pool: true,                // Use connection pooling
-    maxConnections: 1,         // Limit concurrent connections
-    maxMessages: 3,            // Max messages per connection
-    rateDelta: 20000,          // Rate limiting
-    rateLimit: 5               // Max 5 emails per rateDelta
+      user: 'apikey',
+      pass: config.SENDGRID_API_KEY
+    }
   });
 };
 
@@ -139,10 +206,7 @@ const sendEmailWithRetry = async (mailOptions, maxRetries = 3) => {
 const sendRegistrationEmail = async (registrationData) => {
   try {
     // Check if email is properly configured
-    const emailUser = process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com';
-    const emailPass = process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz';
-    
-    if (!emailUser || !emailPass || emailPass === 'mpkk nuhi npld tgoz' || emailPass === 'your-16-digit-app-password') {
+    if (!config.EMAIL_USER || !config.EMAIL_PASS) {
       console.log('Email not configured - skipping email send');
       console.log('Registration details:', {
         name: registrationData.name,
@@ -154,7 +218,7 @@ const sendRegistrationEmail = async (registrationData) => {
     }
 
     const mailOptions = {
-      from: emailUser,
+      from: config.EMAIL_FROM || config.EMAIL_USER,
       to: registrationData.email,
       subject: `Course Registration Confirmation - ${registrationData.courseTitle}`,
       html: createRegistrationEmailTemplate(registrationData)
@@ -179,10 +243,7 @@ const sendRegistrationEmail = async (registrationData) => {
 const sendPaymentConfirmationEmail = async (registrationData) => {
   try {
     // Check if email is properly configured
-    const emailUser = process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com';
-    const emailPass = process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz';
-    
-    if (!emailUser || !emailPass || emailPass === 'mpkk nuhi npld tgoz' || emailPass === 'your-16-digit-app-password') {
+    if (!config.EMAIL_USER || !config.EMAIL_PASS) {
       console.log('Email not configured - skipping payment confirmation email');
       console.log('Payment confirmation details:', {
         name: registrationData.name,
@@ -195,7 +256,7 @@ const sendPaymentConfirmationEmail = async (registrationData) => {
     }
 
     const mailOptions = {
-      from: emailUser,
+      from: config.EMAIL_FROM || config.EMAIL_USER,
       to: registrationData.email,
       subject: `Payment Confirmed - ${registrationData.courseTitle}`,
       html: createRegistrationEmailTemplate({ ...registrationData, status: 'confirmed' })
