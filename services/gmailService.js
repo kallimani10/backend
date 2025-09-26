@@ -1,7 +1,7 @@
 // Clean Gmail-only email service with web fallback
 const nodemailer = require('nodemailer');
 const { logEmailForManualSending } = require('./emailLogger');
-const { sendPaymentConfirmationViaWeb } = require('./webEmailService');
+const { sendPaymentConfirmation } = require('./simpleEmailService');
 
 // Gmail configuration
 const GMAIL_USER = 'zerokosthealthcare@gmail.com';
@@ -44,16 +44,16 @@ const sendEmail = async (to, subject, html) => {
   } catch (error) {
     console.error('Gmail failed:', error.message);
     
-    // Try web-based email service as fallback
-    console.log('Trying web-based email service as fallback...');
+    // Try simple email service as fallback
+    console.log('Trying simple email service as fallback...');
     try {
-      const webResult = await sendPaymentConfirmationViaWeb(to, 'Student', subject.replace('🎉 Payment Confirmed - ', ''), 'web-fallback');
-      if (webResult.success) {
-        console.log('Email sent successfully via web service');
-        return { success: true, messageId: webResult.messageId, method: 'web' };
+      const simpleResult = await sendPaymentConfirmation(to, 'Student', subject.replace('🎉 Payment Confirmed - ', ''), 'simple-fallback');
+      if (simpleResult.success) {
+        console.log('Email sent successfully via simple service');
+        return { success: true, messageId: simpleResult.messageId, method: 'simple' };
       }
-    } catch (webError) {
-      console.log('Web service also failed:', webError.message);
+    } catch (simpleError) {
+      console.log('Simple service also failed:', simpleError.message);
     }
     
     // If web service also fails, log for manual sending
