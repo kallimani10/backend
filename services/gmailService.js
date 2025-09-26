@@ -1,5 +1,6 @@
 // Clean Gmail-only email service
 const nodemailer = require('nodemailer');
+const { logEmailForManualSending } = require('./emailLogger');
 
 // Gmail configuration
 const GMAIL_USER = 'zerokosthealthcare@gmail.com';
@@ -19,7 +20,7 @@ const createGmailTransporter = () => {
   });
 };
 
-// Send email function
+// Send email function with fallback logging
 const sendEmail = async (to, subject, html) => {
   try {
     console.log(`Sending email to: ${to}`);
@@ -41,6 +42,15 @@ const sendEmail = async (to, subject, html) => {
     return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error('Email failed:', error.message);
+    
+    // Log email details for manual sending
+    logEmailForManualSending({
+      to: to,
+      subject: subject,
+      from: GMAIL_USER,
+      html: html
+    });
+    
     return { success: false, error: error.message };
   }
 };

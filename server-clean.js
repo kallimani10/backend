@@ -5,7 +5,6 @@ const axios = require('axios');
 const config = require('./config');
 const Registration = require('./models/Registration');
 const { sendEmail, sendPaymentConfirmation, sendTestEmail } = require('./services/gmailService');
-const { getLoggedEmails, clearEmailLogs } = require('./services/emailLogger');
 
 const app = express();
 
@@ -77,41 +76,6 @@ app.post('/api/send-email', async (req, res) => {
     console.error('Email error:', error);
     res.status(500).json({
       error: 'Email failed',
-      details: error.message
-    });
-  }
-});
-
-// Get logged emails for manual sending
-app.get('/api/logged-emails', async (req, res) => {
-  try {
-    const loggedEmails = getLoggedEmails();
-    res.json({
-      message: 'Logged emails retrieved',
-      count: loggedEmails.length,
-      emails: loggedEmails
-    });
-  } catch (error) {
-    console.error('Error getting logged emails:', error);
-    res.status(500).json({
-      error: 'Failed to get logged emails',
-      details: error.message
-    });
-  }
-});
-
-// Clear logged emails
-app.delete('/api/logged-emails', async (req, res) => {
-  try {
-    const cleared = clearEmailLogs();
-    res.json({
-      message: 'Logged emails cleared',
-      success: cleared
-    });
-  } catch (error) {
-    console.error('Error clearing logged emails:', error);
-    res.status(500).json({
-      error: 'Failed to clear logged emails',
       details: error.message
     });
   }
