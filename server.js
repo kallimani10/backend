@@ -4,7 +4,8 @@ const cors = require('cors');
 const axios = require('axios');
 const config = require('./config');
 const Registration = require('./models/Registration');
-const { sendRegistrationEmail, sendPaymentConfirmationEmail } = require('./services/emailService');
+const { sendPaymentConfirmationEmail } = require('./services/emailService');
+const { sendSimpleEmail, testEmail } = require('./services/simpleEmailService');
 
 const app = express();
 
@@ -39,6 +40,24 @@ app.get('/', (req, res) => {
   res.json({ message: 'Course Registration API is running!' });
 });
 
+// Test email endpoint
+app.get('/api/test-email', async (req, res) => {
+  try {
+    console.log('Testing email functionality...');
+    const result = await testEmail();
+    res.json({ 
+      message: 'Email test completed',
+      result: result
+    });
+  } catch (error) {
+    console.error('Email test error:', error);
+    res.status(500).json({ 
+      error: 'Email test failed',
+      details: error.message
+    });
+  }
+});
+
 // Submit registration form
 app.post('/api/register', async (req, res) => {
   try {
@@ -67,17 +86,8 @@ app.post('/api/register', async (req, res) => {
     // Save to database
     const savedRegistration = await registration.save();
 
-    // Send registration confirmation email
-    try {
-      const emailResult = await sendRegistrationEmail(savedRegistration);
-      if (emailResult.success) {
-        console.log('Registration email sent successfully');
-      } else {
-        console.log('Failed to send registration email:', emailResult.error);
-      }
-    } catch (emailError) {
-      console.error('Email sending error:', emailError);
-    }
+    // Note: Email will be sent only after successful payment
+    console.log('Registration saved successfully. Email will be sent after payment confirmation.');
 
     res.status(201).json({
       message: 'Registration submitted successfully!',
@@ -175,14 +185,26 @@ app.post('/api/webhook/cashfree', async (req, res) => {
       );
       console.log(`Order ${order_id} marked as confirmed for registration:`, updatedRegistration?._id);
       
-      // Send payment confirmation email
+      // Send payment confirmation email (non-blocking)
       if (updatedRegistration) {
-        try {
-          const emailResult = await sendPaymentConfirmationEmail(updatedRegistration);
-          if (emailResult.success) {
-            console.log('Payment confirmation email sent successfully');
-          } else {
-            console.log('Failed to send payment confirmation email:', emailResult.error);
+        setImmediate(async () => {
+          try {
+            const emailResult = await sendPaymentConfirmationEmail(updatedRegistration);
+            if (emailResult.success) {
+              console.log('Payment confirmation email sent successfully');
+            } else {
+              console.log('Failed to send payment confirmation email:', emailResult.error);
+              // Log the details for manual follow-up if needed
+              console.log('Payment confirmation details logged instead:', {
+                name: updatedRegistration.name,
+                email: updatedRegistration.email,
+                course: updatedRegistration.courseTitle,
+                status: 'confirmed',
+                orderId: updatedRegistration.orderId
+              });
+            }
+          } catch (emailError) {
+            console.error('Payment confirmation email error:', emailError);
             // Log the details for manual follow-up if needed
             console.log('Payment confirmation details logged instead:', {
               name: updatedRegistration.name,
@@ -192,17 +214,7 @@ app.post('/api/webhook/cashfree', async (req, res) => {
               orderId: updatedRegistration.orderId
             });
           }
-        } catch (emailError) {
-          console.error('Payment confirmation email error:', emailError);
-          // Log the details for manual follow-up if needed
-          console.log('Payment confirmation details logged instead:', {
-            name: updatedRegistration.name,
-            email: updatedRegistration.email,
-            course: updatedRegistration.courseTitle,
-            status: 'confirmed',
-            orderId: updatedRegistration.orderId
-          });
-        }
+        });
       }
     }
     
@@ -246,14 +258,26 @@ app.post('/api/check-payment-status', async (req, res) => {
       
       console.log(`Updated registration status for order ${orderId}:`, updatedRegistration ? 'SUCCESS' : 'NOT FOUND');
       
-      // Send payment confirmation email
+      // Send payment confirmation email (non-blocking)
       if (updatedRegistration) {
-        try {
-          const emailResult = await sendPaymentConfirmationEmail(updatedRegistration);
-          if (emailResult.success) {
-            console.log('Payment confirmation email sent successfully');
-          } else {
-            console.log('Failed to send payment confirmation email:', emailResult.error);
+        setImmediate(async () => {
+          try {
+            const emailResult = await sendPaymentConfirmationEmail(updatedRegistration);
+            if (emailResult.success) {
+              console.log('Payment confirmation email sent successfully');
+            } else {
+              console.log('Failed to send payment confirmation email:', emailResult.error);
+              // Log the details for manual follow-up if needed
+              console.log('Payment confirmation details logged instead:', {
+                name: updatedRegistration.name,
+                email: updatedRegistration.email,
+                course: updatedRegistration.courseTitle,
+                status: 'confirmed',
+                orderId: updatedRegistration.orderId
+              });
+            }
+          } catch (emailError) {
+            console.error('Payment confirmation email error:', emailError);
             // Log the details for manual follow-up if needed
             console.log('Payment confirmation details logged instead:', {
               name: updatedRegistration.name,
@@ -263,17 +287,7 @@ app.post('/api/check-payment-status', async (req, res) => {
               orderId: updatedRegistration.orderId
             });
           }
-        } catch (emailError) {
-          console.error('Payment confirmation email error:', emailError);
-          // Log the details for manual follow-up if needed
-          console.log('Payment confirmation details logged instead:', {
-            name: updatedRegistration.name,
-            email: updatedRegistration.email,
-            course: updatedRegistration.courseTitle,
-            status: 'confirmed',
-            orderId: updatedRegistration.orderId
-          });
-        }
+        });
       }
     }
     

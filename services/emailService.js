@@ -106,69 +106,90 @@ const createSendGridTransporter = () => {
 //   }
 // });
 
-// Email template for registration confirmation
-const createRegistrationEmailTemplate = (registrationData) => {
+// Enhanced email template for payment confirmation
+const createPaymentConfirmationEmailTemplate = (registrationData) => {
   return `
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="utf-8">
-        <title>Course Registration Confirmation</title>
+        <title>Payment Confirmed - Course Registration</title>
         <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
             .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-            .course-info { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
-            .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
-            .status-pending { background: #fff3cd; color: #856404; }
-            .status-confirmed { background: #d4edda; color: #155724; }
+            .course-info { background: white; padding: 25px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .payment-info { background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #28a745; }
+            .status-badge { display: inline-block; padding: 8px 20px; border-radius: 25px; font-weight: bold; font-size: 16px; }
+            .status-confirmed { background: #d4edda; color: #155724; border: 2px solid #28a745; }
+            .details-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .details-table td { padding: 10px; border-bottom: 1px solid #ddd; }
+            .details-table td:first-child { font-weight: bold; width: 30%; }
             .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+            .success-icon { font-size: 48px; margin-bottom: 20px; }
+            .next-steps { background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107; }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
-                <h1>🎓 Course Registration Confirmation</h1>
-                <p>Thank you for registering with us!</p>
+                <div class="success-icon">🎉</div>
+                <h1>Payment Confirmed!</h1>
+                <p>Your course registration is now complete</p>
             </div>
             
             <div class="content">
-                 <h2>Hello ${registrationData.name || 'Student'}!</h2>
-                 
-                 <p>We have received your registration for the following course:</p>
-                 
-                 <div class="course-info">
-                     <h3>📚 ${registrationData.courseTitle || registrationData.course || 'Course'}</h3>
-                     <p><strong>Duration:</strong> ${registrationData.courseDuration || 'N/A'}</p>
-                     <p><strong>Price:</strong> ${registrationData.coursePrice || '₹9/-'}</p>
-                     <p><strong>Registration Date:</strong> ${registrationData.registrationDate ? new Date(registrationData.registrationDate).toLocaleDateString() : new Date().toLocaleDateString()}</p>
-                     <p><strong>Status:</strong> 
-                         <span class="status-badge ${registrationData.status === 'confirmed' ? 'status-confirmed' : 'status-pending'}">
-                             ${registrationData.status === 'confirmed' ? '✅ Confirmed' : '⏳ Pending Payment'}
-                         </span>
-                     </p>
-                 </div>
+                <h2>Hello ${registrationData.name || 'Student'}!</h2>
                 
-                ${registrationData.status === 'confirmed' ? 
-                    '<p><strong>🎉 Congratulations!</strong> Your payment has been processed successfully and your course registration is confirmed.</p>' :
-                    '<p><strong>📝 Next Steps:</strong> Please complete your payment to confirm your registration. You will receive another email once your payment is processed.</p>'
-                }
+                <p><strong>🎉 Congratulations!</strong> Your payment has been processed successfully and your course registration is confirmed.</p>
                 
-                 <h3>📋 Registration Details:</h3>
-                 <ul>
-                     <li><strong>Name:</strong> ${registrationData.name || 'N/A'}</li>
-                     <li><strong>Email:</strong> ${registrationData.email || 'N/A'}</li>
-                     <li><strong>Mobile:</strong> ${registrationData.mobile || 'N/A'}</li>
-                     <li><strong>Course ID:</strong> ${registrationData.courseId || 'N/A'}</li>
-                     ${registrationData.orderId ? `<li><strong>Order ID:</strong> ${registrationData.orderId}</li>` : ''}
-                 </ul>
+                <div class="course-info">
+                    <h3>📚 Course Details</h3>
+                    <table class="details-table">
+                        <tr><td>Course Name:</td><td>${registrationData.courseTitle || registrationData.course || 'N/A'}</td></tr>
+                        <tr><td>Duration:</td><td>${registrationData.courseDuration || 'N/A'}</td></tr>
+                        <tr><td>Price Paid:</td><td>${registrationData.coursePrice || '₹9/-'}</td></tr>
+                        <tr><td>Registration Date:</td><td>${registrationData.registrationDate ? new Date(registrationData.registrationDate).toLocaleDateString() : new Date().toLocaleDateString()}</td></tr>
+                        <tr><td>Payment Date:</td><td>${new Date().toLocaleDateString()}</td></tr>
+                        <tr><td>Status:</td><td><span class="status-badge status-confirmed">✅ Payment Confirmed</span></td></tr>
+                    </table>
+                </div>
                 
-                <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+                <div class="payment-info">
+                    <h3>💳 Payment Information</h3>
+                    <table class="details-table">
+                        <tr><td>Order ID:</td><td>${registrationData.orderId || 'N/A'}</td></tr>
+                        <tr><td>Payment Status:</td><td>✅ Successfully Processed</td></tr>
+                        <tr><td>Amount Paid:</td><td>${registrationData.coursePrice || '₹9/-'}</td></tr>
+                        <tr><td>Payment Method:</td><td>Online Payment (Cashfree)</td></tr>
+                    </table>
+                </div>
+                
+                <div class="next-steps">
+                    <h3>📋 What's Next?</h3>
+                    <ul>
+                        <li>You will receive course access details within 24 hours</li>
+                        <li>Check your email for any additional course materials</li>
+                        <li>Join our community for course updates and support</li>
+                        <li>If you have any questions, contact our support team</li>
+                    </ul>
+                </div>
+                
+                <h3>👤 Registration Details</h3>
+                <table class="details-table">
+                    <tr><td>Full Name:</td><td>${registrationData.name || 'N/A'}</td></tr>
+                    <tr><td>Email Address:</td><td>${registrationData.email || 'N/A'}</td></tr>
+                    <tr><td>Mobile Number:</td><td>${registrationData.mobile || 'N/A'}</td></tr>
+                    <tr><td>Course ID:</td><td>${registrationData.courseId || 'N/A'}</td></tr>
+                </table>
+                
+                <p><strong>Thank you for choosing our course!</strong> We're excited to have you as a student and look forward to your success.</p>
                 
                 <div class="footer">
-                    <p>Best regards,<br>Course Registration Team</p>
-                    <p><em>This is an automated email. Please do not reply to this email.</em></p>
+                    <p><strong>Best regards,<br>Course Registration Team</strong></p>
+                    <p><em>This is an automated confirmation email. Please save this email for your records.</em></p>
+                    <p>For support, please contact us at: support@yourdomain.com</p>
                 </div>
             </div>
         </div>
@@ -177,67 +198,91 @@ const createRegistrationEmailTemplate = (registrationData) => {
   `;
 };
 
-// Retry mechanism for email sending
-const sendEmailWithRetry = async (mailOptions, maxRetries = 3) => {
+// Fast email sending with multiple fallback services
+const sendEmailWithFallback = async (mailOptions, maxRetries = 2) => {
+  const emailServices = ['gmail', 'outlook', 'custom'];
   let lastError;
   
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+  for (const service of emailServices) {
     try {
-      const transporter = createTransporter();
+      console.log(`Trying email service: ${service}`);
+      const transporter = createTransporterForService(service);
       const result = await transporter.sendMail(mailOptions);
-      await transporter.close(); // Close the connection
-      return { success: true, messageId: result.messageId };
+      await transporter.close();
+      console.log(`Email sent successfully using ${service}`);
+      return { success: true, messageId: result.messageId, service };
     } catch (error) {
       lastError = error;
-      console.log(`Email send attempt ${attempt} failed:`, error.message);
-      
-      if (attempt < maxRetries) {
-        const delay = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
-        console.log(`Retrying in ${delay}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
+      console.log(`${service} failed:`, error.message);
+      continue;
     }
   }
   
   throw lastError;
 };
 
-// Function to send registration confirmation email
-const sendRegistrationEmail = async (registrationData) => {
-  try {
-    // Check if email is properly configured
-    if (!config.EMAIL_USER || !config.EMAIL_PASS) {
-      console.log('Email not configured - skipping email send');
-      console.log('Registration details:', {
-        name: registrationData.name,
-        email: registrationData.email,
-        course: registrationData.courseTitle,
-        status: registrationData.status
-      });
-      return { success: true, messageId: 'email-disabled' };
-    }
-
-    const mailOptions = {
-      from: config.EMAIL_FROM || config.EMAIL_USER,
-      to: registrationData.email,
-      subject: `Course Registration Confirmation - ${registrationData.courseTitle}`,
-      html: createRegistrationEmailTemplate(registrationData)
-    };
-
-    const result = await sendEmailWithRetry(mailOptions);
-    console.log('Registration email sent successfully:', result.messageId);
-    return { success: true, messageId: result.messageId };
-  } catch (error) {
-    console.error('Error sending registration email:', error);
-    console.log('Registration details logged instead:', {
-      name: registrationData.name,
-      email: registrationData.email,
-      course: registrationData.courseTitle,
-      status: registrationData.status
-    });
-    return { success: false, error: error.message };
+// Create transporter for specific service
+const createTransporterForService = (service) => {
+  if (!config.EMAIL_USER || !config.EMAIL_PASS) {
+    throw new Error('Email not configured');
   }
+
+  let transporterConfig;
+
+  switch (service.toLowerCase()) {
+    case 'gmail':
+      transporterConfig = {
+        service: 'gmail',
+        auth: {
+          user: config.EMAIL_USER,
+          pass: config.EMAIL_PASS
+        },
+        connectionTimeout: 10000,  // 10 seconds (faster)
+        greetingTimeout: 5000,     // 5 seconds (faster)
+        socketTimeout: 10000,      // 10 seconds (faster)
+        pool: false,               // No pooling for faster connection
+        maxConnections: 1,
+        maxMessages: 1
+      };
+      break;
+
+    case 'outlook':
+      transporterConfig = {
+        service: 'hotmail',
+        auth: {
+          user: config.EMAIL_USER,
+          pass: config.EMAIL_PASS
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 5000,
+        socketTimeout: 10000
+      };
+      break;
+
+    case 'custom':
+      transporterConfig = {
+        host: config.EMAIL_HOST || 'smtp.gmail.com',
+        port: config.EMAIL_PORT || 587,
+        secure: config.EMAIL_SECURE || false,
+        auth: {
+          user: config.EMAIL_USER,
+          pass: config.EMAIL_PASS
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 5000,
+        socketTimeout: 10000
+      };
+      break;
+
+    default:
+      throw new Error(`Unsupported email service: ${service}`);
+  }
+
+  return nodemailer.createTransport(transporterConfig);
 };
+
+// Note: Registration emails are no longer sent immediately
+// Emails are only sent after successful payment confirmation
 
 // Function to send payment confirmation email
 const sendPaymentConfirmationEmail = async (registrationData) => {
@@ -258,11 +303,11 @@ const sendPaymentConfirmationEmail = async (registrationData) => {
     const mailOptions = {
       from: config.EMAIL_FROM || config.EMAIL_USER,
       to: registrationData.email,
-      subject: `Payment Confirmed - ${registrationData.courseTitle}`,
-      html: createRegistrationEmailTemplate({ ...registrationData, status: 'confirmed' })
+      subject: `🎉 Payment Confirmed - ${registrationData.courseTitle || registrationData.course}`,
+      html: createPaymentConfirmationEmailTemplate(registrationData)
     };
 
-    const result = await sendEmailWithRetry(mailOptions);
+    const result = await sendEmailWithFallback(mailOptions);
     console.log('Payment confirmation email sent successfully:', result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
@@ -279,6 +324,5 @@ const sendPaymentConfirmationEmail = async (registrationData) => {
 };
 
 module.exports = {
-  sendRegistrationEmail,
   sendPaymentConfirmationEmail
 };
