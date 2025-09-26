@@ -7,7 +7,7 @@ const GMAIL_PASS = 'zwat ekzv fxnj lczy';
 
 // Create Gmail transporter
 const createTransporter = () => {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: GMAIL_USER,
