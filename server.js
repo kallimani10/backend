@@ -43,16 +43,54 @@ app.get('/', (req, res) => {
 // Test email endpoint
 app.get('/api/test-email', async (req, res) => {
   try {
-    console.log('Testing email functionality...');
+    console.log('Testing Gmail email functionality...');
     const result = await testEmail();
     res.json({ 
-      message: 'Email test completed',
+      message: 'Gmail email test completed',
       result: result
     });
   } catch (error) {
-    console.error('Email test error:', error);
+    console.error('Gmail email test error:', error);
     res.status(500).json({ 
-      error: 'Email test failed',
+      error: 'Gmail email test failed',
+      details: error.message
+    });
+  }
+});
+
+// Gmail connection test endpoint
+app.get('/api/test-gmail', async (req, res) => {
+  try {
+    console.log('Testing Gmail connection...');
+    
+    // Test Gmail connection
+    const nodemailer = require('nodemailer');
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'zerokosthealthcare@gmail.com',
+        pass: 'mpkk nuhi npld tgoz'
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false
+      }
+    });
+
+    // Verify connection
+    await transporter.verify();
+    await transporter.close();
+    
+    res.json({ 
+      message: 'Gmail connection successful',
+      status: 'connected'
+    });
+  } catch (error) {
+    console.error('Gmail connection test error:', error);
+    res.status(500).json({ 
+      error: 'Gmail connection failed',
       details: error.message
     });
   }

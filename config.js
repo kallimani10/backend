@@ -9,9 +9,9 @@ module.exports = {
   CASHFREE_BASE: process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg',
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
   
-  // Email Configuration - Multiple Options
-  EMAIL_USER: process.env.EMAIL_USER || null,
-  EMAIL_PASS: process.env.EMAIL_PASS || null,
+  // Email Configuration - Gmail Only
+  EMAIL_USER: process.env.EMAIL_USER || 'zerokosthealthcare@gmail.com',
+  EMAIL_PASS: process.env.EMAIL_PASS || 'mpkk nuhi npld tgoz',
   
   // Alternative Email Services
   EMAIL_HOST: process.env.EMAIL_HOST || null,

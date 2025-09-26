@@ -203,102 +203,104 @@ const createPaymentConfirmationEmailTemplate = (registrationData) => {
   `;
 };
 
-// Production-ready email sending with SendGrid as primary
-const sendEmailWithFallback = async (mailOptions, maxRetries = 2) => {
-  // Try SendGrid first (best for production)
-  if (config.SENDGRID_API_KEY) {
+// Gmail-only email sending with optimized configuration
+const sendEmailWithFallback = async (mailOptions, maxRetries = 3) => {
+  console.log('Attempting to send email using Gmail...');
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log('Trying email service: sendgrid');
-      const transporter = createTransporterForService('sendgrid');
+      console.log(`Gmail attempt ${attempt}/${maxRetries}`);
+      const transporter = createOptimizedGmailTransporter();
       const result = await transporter.sendMail(mailOptions);
       await transporter.close();
-      console.log('Email sent successfully using SendGrid');
-      return { success: true, messageId: result.messageId, service: 'sendgrid' };
+      console.log(`Email sent successfully using Gmail (attempt ${attempt})`);
+      return { success: true, messageId: result.messageId, service: 'gmail' };
     } catch (error) {
-      console.log('SendGrid failed:', error.message);
+      console.log(`Gmail attempt ${attempt} failed:`, error.message);
+      
+      if (attempt < maxRetries) {
+        const delay = attempt * 2000; // 2s, 4s, 6s delays
+        console.log(`Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
     }
   }
-  
-  // Fallback to SMTP services
-  const emailServices = ['gmail', 'outlook', 'custom'];
-  let lastError;
-  
-  for (const service of emailServices) {
-    try {
-      console.log(`Trying email service: ${service}`);
-      const transporter = createTransporterForService(service);
-      const result = await transporter.sendMail(mailOptions);
-      await transporter.close();
-      console.log(`Email sent successfully using ${service}`);
-      return { success: true, messageId: result.messageId, service };
-    } catch (error) {
-      lastError = error;
-      console.log(`${service} failed:`, error.message);
-      continue;
-    }
-  }
-  
-  throw lastError;
 };
 
-// Create transporter for specific service
-const createTransporterForService = (service) => {
+// Optimized Gmail transporter with multiple configuration options
+const createOptimizedGmailTransporter = () => {
   if (!config.EMAIL_USER || !config.EMAIL_PASS) {
-    throw new Error('Email not configured');
+    throw new Error('Gmail not configured. Please set EMAIL_USER and EMAIL_PASS');
   }
 
-  let transporterConfig;
+  // Try different Gmail configurations for better compatibility
+  const gmailConfigs = [
+    // Configuration 1: Standard Gmail service
+    {
+      service: 'gmail',
+      auth: {
+        user: config.EMAIL_USER,
+        pass: config.EMAIL_PASS
+      },
+      connectionTimeout: 15000,  // 15 seconds
+      greetingTimeout: 10000,    // 10 seconds
+      socketTimeout: 15000,      // 15 seconds
+      pool: false,
+      maxConnections: 1,
+      maxMessages: 1,
+      tls: {
+        rejectUnauthorized: false
+      }
+    },
+    // Configuration 2: Direct SMTP with Gmail
+    {
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: config.EMAIL_USER,
+        pass: config.EMAIL_PASS
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false
+      }
+    },
+    // Configuration 3: Gmail with SSL
+    {
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: config.EMAIL_USER,
+        pass: config.EMAIL_PASS
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
+      tls: {
+        rejectUnauthorized: false
+      }
+    }
+  ];
 
-  switch (service.toLowerCase()) {
-    case 'gmail':
-      transporterConfig = {
-        service: 'gmail',
-        auth: {
-          user: config.EMAIL_USER,
-          pass: config.EMAIL_PASS
-        },
-        connectionTimeout: 10000,  // 10 seconds (faster)
-        greetingTimeout: 5000,     // 5 seconds (faster)
-        socketTimeout: 10000,      // 10 seconds (faster)
-        pool: false,               // No pooling for faster connection
-        maxConnections: 1,
-        maxMessages: 1
-      };
-      break;
-
-    case 'outlook':
-      transporterConfig = {
-        service: 'hotmail',
-        auth: {
-          user: config.EMAIL_USER,
-          pass: config.EMAIL_PASS
-        },
-        connectionTimeout: 10000,
-        greetingTimeout: 5000,
-        socketTimeout: 10000
-      };
-      break;
-
-    case 'custom':
-      transporterConfig = {
-        host: config.EMAIL_HOST || 'smtp.gmail.com',
-        port: config.EMAIL_PORT || 587,
-        secure: config.EMAIL_SECURE || false,
-        auth: {
-          user: config.EMAIL_USER,
-          pass: config.EMAIL_PASS
-        },
-        connectionTimeout: 10000,
-        greetingTimeout: 5000,
-        socketTimeout: 10000
-      };
-      break;
-
-    default:
-      throw new Error(`Unsupported email service: ${service}`);
+  // Try each configuration until one works
+  for (let i = 0; i < gmailConfigs.length; i++) {
+    try {
+      console.log(`Trying Gmail configuration ${i + 1}`);
+      const transporter = nodemailer.createTransport(gmailConfigs[i]);
+      return transporter;
+    } catch (error) {
+      console.log(`Gmail configuration ${i + 1} failed:`, error.message);
+      if (i === gmailConfigs.length - 1) {
+        throw error;
+      }
+    }
   }
-
-  return nodemailer.createTransport(transporterConfig);
 };
 
 // Note: Registration emails are no longer sent immediately
