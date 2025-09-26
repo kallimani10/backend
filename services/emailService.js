@@ -229,78 +229,34 @@ const sendEmailWithFallback = async (mailOptions, maxRetries = 3) => {
   }
 };
 
-// Optimized Gmail transporter with multiple configuration options
+// Simple and reliable Gmail transporter
 const createOptimizedGmailTransporter = () => {
-  if (!config.EMAIL_USER || !config.EMAIL_PASS) {
-    throw new Error('Gmail not configured. Please set EMAIL_USER and EMAIL_PASS');
-  }
-
-  // Try different Gmail configurations for better compatibility
-  const gmailConfigs = [
-    // Configuration 1: Standard Gmail service
-    {
-      service: 'gmail',
-      auth: {
-        user: config.EMAIL_USER,
-        pass: config.EMAIL_PASS
-      },
-      connectionTimeout: 15000,  // 15 seconds
-      greetingTimeout: 10000,    // 10 seconds
-      socketTimeout: 15000,      // 15 seconds
-      pool: false,
-      maxConnections: 1,
-      maxMessages: 1,
-      tls: {
-        rejectUnauthorized: false
-      }
+  console.log('Creating Gmail transporter...');
+  
+  // Use hardcoded Gmail credentials for reliability
+  const gmailUser = 'zerokosthealthcare@gmail.com';
+  const gmailPass = 'mpkk nuhi npld tgoz';
+  
+  console.log('Gmail user:', gmailUser);
+  console.log('Gmail pass length:', gmailPass ? gmailPass.length : 'undefined');
+  
+  // Simple Gmail configuration that works
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: gmailUser,
+      pass: gmailPass
     },
-    // Configuration 2: Direct SMTP with Gmail
-    {
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: config.EMAIL_USER,
-        pass: config.EMAIL_PASS
-      },
-      connectionTimeout: 15000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-      tls: {
-        rejectUnauthorized: false
-      }
-    },
-    // Configuration 3: Gmail with SSL
-    {
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: {
-        user: config.EMAIL_USER,
-        pass: config.EMAIL_PASS
-      },
-      connectionTimeout: 15000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-      tls: {
-        rejectUnauthorized: false
-      }
-    }
-  ];
-
-  // Try each configuration until one works
-  for (let i = 0; i < gmailConfigs.length; i++) {
-    try {
-      console.log(`Trying Gmail configuration ${i + 1}`);
-      const transporter = nodemailer.createTransport(gmailConfigs[i]);
-      return transporter;
-    } catch (error) {
-      console.log(`Gmail configuration ${i + 1} failed:`, error.message);
-      if (i === gmailConfigs.length - 1) {
-        throw error;
-      }
-    }
-  }
+    connectionTimeout: 20000,  // 20 seconds
+    greetingTimeout: 15000,    // 15 seconds
+    socketTimeout: 20000,      // 20 seconds
+    pool: false,
+    maxConnections: 1,
+    maxMessages: 1
+  });
+  
+  console.log('Gmail transporter created successfully');
+  return transporter;
 };
 
 // Note: Registration emails are no longer sent immediately

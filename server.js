@@ -6,6 +6,7 @@ const config = require('./config');
 const Registration = require('./models/Registration');
 const { sendPaymentConfirmationEmail } = require('./services/emailService');
 const { sendSimpleEmail, testEmail } = require('./services/simpleEmailService');
+const { sendSimpleGmailEmail, testGmailEmail } = require('./services/simpleGmailService');
 
 const app = express();
 
@@ -58,12 +59,30 @@ app.get('/api/test-email', async (req, res) => {
   }
 });
 
+// Simple Gmail test endpoint
+app.get('/api/test-simple-gmail', async (req, res) => {
+  try {
+    console.log('Testing simple Gmail email...');
+    const result = await testGmailEmail();
+    res.json({ 
+      message: 'Simple Gmail test completed',
+      result: result
+    });
+  } catch (error) {
+    console.error('Simple Gmail test error:', error);
+    res.status(500).json({ 
+      error: 'Simple Gmail test failed',
+      details: error.message
+    });
+  }
+});
+
 // Gmail connection test endpoint
 app.get('/api/test-gmail', async (req, res) => {
   try {
     console.log('Testing Gmail connection...');
     
-    // Test Gmail connection
+    // Test Gmail connection with simple configuration
     const nodemailer = require('nodemailer');
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -71,27 +90,34 @@ app.get('/api/test-gmail', async (req, res) => {
         user: 'zerokosthealthcare@gmail.com',
         pass: 'mpkk nuhi npld tgoz'
       },
-      connectionTimeout: 15000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
-      tls: {
-        rejectUnauthorized: false
-      }
+      connectionTimeout: 20000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
+      pool: false,
+      maxConnections: 1,
+      maxMessages: 1
     });
 
+    console.log('Gmail transporter created, verifying connection...');
+    
     // Verify connection
-    await transporter.verify();
+    const verified = await transporter.verify();
+    console.log('Gmail connection verified:', verified);
+    
     await transporter.close();
+    console.log('Gmail connection closed');
     
     res.json({ 
       message: 'Gmail connection successful',
-      status: 'connected'
+      status: 'connected',
+      verified: verified
     });
   } catch (error) {
     console.error('Gmail connection test error:', error);
     res.status(500).json({ 
       error: 'Gmail connection failed',
-      details: error.message
+      details: error.message,
+      code: error.code
     });
   }
 });
@@ -127,6 +153,72 @@ app.post('/api/send-manual-email', async (req, res) => {
     console.error('Manual email error:', error);
     res.status(500).json({
       error: 'Manual email failed',
+      details: error.message
+    });
+  }
+});
+
+// Simple manual email endpoint using simple Gmail service
+app.post('/api/send-simple-email', async (req, res) => {
+  try {
+    const { email, name, course, orderId } = req.body;
+    
+    if (!email || !name || !course) {
+      return res.status(400).json({ error: 'Email, name, and course are required' });
+    }
+
+    const subject = `🎉 Payment Confirmed - ${course}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+          <meta charset="utf-8">
+          <title>Payment Confirmed</title>
+          <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+              .success-icon { font-size: 48px; margin-bottom: 20px; }
+          </style>
+      </head>
+      <body>
+          <div class="container">
+              <div class="header">
+                  <div class="success-icon">🎉</div>
+                  <h1>Payment Confirmed!</h1>
+                  <p>Your course registration is complete</p>
+              </div>
+              <div class="content">
+                  <h2>Hello ${name}!</h2>
+                  <p><strong>🎉 Congratulations!</strong> Your payment has been processed successfully.</p>
+                  
+                  <h3>📚 Course Details:</h3>
+                  <p><strong>Course:</strong> ${course}</p>
+                  <p><strong>Price Paid:</strong> ₹9/-</p>
+                  <p><strong>Order ID:</strong> ${orderId || 'N/A'}</p>
+                  <p><strong>Status:</strong> ✅ Payment Confirmed</p>
+                  
+                  <p>Thank you for choosing our course! You will receive course access details soon.</p>
+                  
+                  <p><strong>Best regards,<br>Course Registration Team</strong></p>
+              </div>
+          </div>
+      </body>
+      </html>
+    `;
+
+    console.log('Sending simple email to:', email);
+    const result = await sendSimpleGmailEmail(email, subject, html);
+    
+    res.json({
+      message: 'Simple email sent',
+      result: result
+    });
+  } catch (error) {
+    console.error('Simple email error:', error);
+    res.status(500).json({
+      error: 'Simple email failed',
       details: error.message
     });
   }
