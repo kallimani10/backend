@@ -1,15 +1,13 @@
-// Clean Gmail-only email service with web fallback
+// Simple email service using nodemailer
 const nodemailer = require('nodemailer');
-const { logEmailForManualSending } = require('./emailLogger');
-const { sendPaymentConfirmation: sendSimplePaymentConfirmation } = require('./simpleEmailService');
 
 // Gmail configuration
-const GMAIL_USER = 'zerokosthealthcare@gmail.com';
-const GMAIL_PASS = 'mpkk nuhi npld tgoz';
+const GMAIL_USER = 'nareshkallimani09@gmail.com';
+const GMAIL_PASS = 'zwat ekzv fxnj lczy';
 
 // Create Gmail transporter
-const createGmailTransporter = () => {
-  return nodemailer.createTransport({
+const createTransporter = () => {
+  return nodemailer.createTransporter({
     service: 'gmail',
     auth: {
       user: GMAIL_USER,
@@ -21,13 +19,13 @@ const createGmailTransporter = () => {
   });
 };
 
-// Send email function with fallback logging
+// Send email function
 const sendEmail = async (to, subject, html) => {
   try {
     console.log(`Sending email to: ${to}`);
     console.log(`Subject: ${subject}`);
     
-    const transporter = createGmailTransporter();
+    const transporter = createTransporter();
     
     const mailOptions = {
       from: GMAIL_USER,
@@ -42,28 +40,7 @@ const sendEmail = async (to, subject, html) => {
     console.log('Email sent successfully:', result.messageId);
     return { success: true, messageId: result.messageId };
   } catch (error) {
-    console.error('Gmail failed:', error.message);
-    
-    // Try simple email service as fallback
-    console.log('Trying simple email service as fallback...');
-    try {
-      const simpleResult = await sendSimplePaymentConfirmation(to, 'Student', subject.replace('🎉 Payment Confirmed - ', ''), 'simple-fallback');
-      if (simpleResult.success) {
-        console.log('Email sent successfully via simple service');
-        return { success: true, messageId: simpleResult.messageId, method: 'simple' };
-      }
-    } catch (simpleError) {
-      console.log('Simple service also failed:', simpleError.message);
-    }
-    
-    // If web service also fails, log for manual sending
-    logEmailForManualSending({
-      to: to,
-      subject: subject,
-      from: GMAIL_USER,
-      html: html
-    });
-    
+    console.error('Email failed:', error.message);
     return { success: false, error: error.message };
   }
 };
@@ -130,14 +107,14 @@ const sendPaymentConfirmation = async (email, name, course, orderId) => {
 };
 
 // Test email function
-const sendTestEmail = async (email) => {
-  const subject = '📧 Gmail Test - Success!';
+const sendTestEmail = async (email = 'vaibhavbkalungada@gmail.com') => {
+  const subject = '📧 Email Test - Success!';
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="utf-8">
-        <title>Gmail Test</title>
+        <title>Email Test</title>
         <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -150,15 +127,15 @@ const sendTestEmail = async (email) => {
         <div class="container">
             <div class="header">
                 <div class="success-icon">📧</div>
-                <h1>Gmail Test Successful!</h1>
-                <p>Your Gmail email system is working</p>
+                <h1>Email Test Successful!</h1>
+                <p>Your email system is working</p>
             </div>
             <div class="content">
                 <h2>Test Details:</h2>
                 <p><strong>Test Time:</strong> ${new Date().toISOString()}</p>
                 <p><strong>Email Service:</strong> Gmail SMTP</p>
                 <p><strong>Status:</strong> ✅ Working</p>
-                <p>This confirms that your Gmail email system is properly configured and ready to send payment confirmation emails.</p>
+                <p>This confirms that your email system is properly configured and ready to send payment confirmation emails.</p>
             </div>
         </div>
     </body>

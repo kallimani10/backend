@@ -4,9 +4,7 @@ const cors = require('cors');
 const axios = require('axios');
 const config = require('./config');
 const Registration = require('./models/Registration');
-const { sendEmail, sendPaymentConfirmation, sendTestEmail } = require('./services/gmailService');
-const { getLoggedEmails, clearEmailLogs } = require('./services/emailLogger');
-const { sendPaymentConfirmation: sendSimpleEmail } = require('./services/simpleEmailService');
+const { sendEmail, sendPaymentConfirmation, sendTestEmail } = require('./services/emailService');
 
 const app = express();
 
@@ -40,19 +38,19 @@ app.get('/', (req, res) => {
   res.json({ message: 'Course Registration API is running!' });
 });
 
-// Test Gmail email endpoint
+// Test email endpoint
 app.get('/api/test-email', async (req, res) => {
   try {
-    console.log('Testing Gmail email...');
-    const result = await sendTestEmail('vaibhavbkalungada@gmail.com');
+    console.log('Testing email functionality...');
+    const result = await sendTestEmail();
     res.json({ 
-      message: 'Gmail email test completed',
+      message: 'Email test completed',
       result: result
     });
   } catch (error) {
-    console.error('Gmail email test error:', error);
+    console.error('Email test error:', error);
     res.status(500).json({ 
-      error: 'Gmail email test failed',
+      error: 'Email test failed',
       details: error.message
     });
   }
@@ -78,66 +76,6 @@ app.post('/api/send-email', async (req, res) => {
     console.error('Email error:', error);
     res.status(500).json({
       error: 'Email failed',
-      details: error.message
-    });
-  }
-});
-
-// Get logged emails for manual sending
-app.get('/api/logged-emails', async (req, res) => {
-  try {
-    const loggedEmails = getLoggedEmails();
-    res.json({
-      message: 'Logged emails retrieved',
-      count: loggedEmails.length,
-      emails: loggedEmails
-    });
-  } catch (error) {
-    console.error('Error getting logged emails:', error);
-    res.status(500).json({
-      error: 'Failed to get logged emails',
-      details: error.message
-    });
-  }
-});
-
-// Clear logged emails
-app.delete('/api/logged-emails', async (req, res) => {
-  try {
-    const cleared = clearEmailLogs();
-    res.json({
-      message: 'Logged emails cleared',
-      success: cleared
-    });
-  } catch (error) {
-    console.error('Error clearing logged emails:', error);
-    res.status(500).json({
-      error: 'Failed to clear logged emails',
-      details: error.message
-    });
-  }
-});
-
-// Send email via simple service (bypasses SMTP blocking)
-app.post('/api/send-simple-email', async (req, res) => {
-  try {
-    const { email, name, course, orderId } = req.body;
-    
-    if (!email || !name || !course) {
-      return res.status(400).json({ error: 'Email, name, and course are required' });
-    }
-
-    console.log('Sending email via simple service to:', email);
-    const result = await sendSimpleEmail(email, name, course, orderId);
-    
-    res.json({
-      message: 'Simple email sent',
-      result: result
-    });
-  } catch (error) {
-    console.error('Simple email error:', error);
-    res.status(500).json({
-      error: 'Simple email failed',
       details: error.message
     });
   }
@@ -171,7 +109,6 @@ app.post('/api/register', async (req, res) => {
     // Save to database
     const savedRegistration = await registration.save();
 
-    // Note: Email will be sent only after successful payment
     console.log('Registration saved successfully. Email will be sent after payment confirmation.');
 
     res.status(201).json({

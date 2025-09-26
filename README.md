@@ -1,67 +1,59 @@
-# 🎯 Clean Gmail Email System
+# Course Registration Backend
 
-## 📧 **Simple Gmail-Only Email Service**
+This is the backend for the Course Registration application.
 
-This is a clean, simple email system that uses only Gmail for sending emails.
+## Setup
 
-### **Files:**
-- `services/gmailService.js` - Clean Gmail email service
-- `server.js` - Clean server with essential endpoints only
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+2.  **Configuration**:
+    Update `server/config.js` with your MongoDB URI and Cashfree credentials.
 
-### **Gmail Configuration:**
-- **Email**: `zerokosthealthcare@gmail.com`
-- **App Password**: `mpkk nuhi npld tgoz`
+    ```javascript
+    module.exports = {
+      // ... other config
+      MONGODB_URI: 'your_mongodb_uri',
+      CASHFREE_APP_ID: 'your_cashfree_app_id',
+      CASHFREE_SECRET_KEY: 'your_cashfree_secret_key'
+    };
+    ```
 
-### **Endpoints:**
+3.  **Run Server**:
+    ```bash
+    npm start
+    ```
 
-#### **Test Email:**
-```bash
-GET /api/test-email
-```
+## API Endpoints
 
-#### **Send Payment Confirmation:**
-```bash
-POST /api/send-email
-Content-Type: application/json
+-   `GET /`: Basic API status
+-   `POST /api/register`: Register for a course
+-   `POST /api/create-order`: Create a Cashfree payment order
+-   `POST /api/check-payment-status`: Check payment status
+-   `POST /api/webhook/cashfree`: Cashfree webhook for payment updates
+-   `GET /api/registrations`: Get all registrations (admin)
+-   `POST /api/update-registration-status`: Update registration status (admin)
+-   `GET /api/test-email`: Test email functionality
+-   `POST /api/send-email`: Send payment confirmation email
 
-{
-  "email": "user@example.com",
-  "name": "User Name",
-  "course": "Course Name",
-  "orderId": "order_123"
-}
-```
+## Features
 
-#### **Get Logged Emails (for manual sending):**
-```bash
-GET /api/logged-emails
-```
-
-#### **Clear Logged Emails:**
-```bash
-DELETE /api/logged-emails
-```
-
-### **Features:**
-- ✅ Gmail-only email sending
+- ✅ Course registration
+- ✅ Cashfree payment integration
+- ✅ MongoDB data storage
+- ✅ Payment status tracking
+- ✅ Gmail email confirmation
 - ✅ Professional HTML email templates
-- ✅ Payment confirmation emails
-- ✅ Email logging for manual sending (when SMTP blocked)
 - ✅ Clean, simple code
-- ✅ No unnecessary files
 
-### **How It Works:**
-1. User registers and pays
-2. Payment is confirmed
-3. System tries to send Gmail confirmation email
-4. If Gmail fails (SMTP blocked), email details are logged
-5. You can view logged emails and send them manually
-6. User receives professional email
+## How It Works
 
-### **When SMTP is Blocked:**
-- Email details are automatically logged to `logs/email-log.json`
-- Use `GET /api/logged-emails` to view all logged emails
-- Copy the email details and send manually via Gmail web interface
-- Use `DELETE /api/logged-emails` to clear the logs
+1. User registers for a course
+2. Payment order is created via Cashfree
+3. User completes payment
+4. Payment status is updated in database
+5. Registration is confirmed
+6. Payment confirmation email is sent automatically
 
 **Simple and clean! 🚀**
