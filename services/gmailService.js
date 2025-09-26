@@ -1,7 +1,7 @@
 // Clean Gmail-only email service with web fallback
 const nodemailer = require('nodemailer');
 const { logEmailForManualSending } = require('./emailLogger');
-const { sendPaymentConfirmation } = require('./simpleEmailService');
+const { sendPaymentConfirmation: sendSimplePaymentConfirmation } = require('./simpleEmailService');
 
 // Gmail configuration
 const GMAIL_USER = 'zerokosthealthcare@gmail.com';
@@ -47,7 +47,7 @@ const sendEmail = async (to, subject, html) => {
     // Try simple email service as fallback
     console.log('Trying simple email service as fallback...');
     try {
-      const simpleResult = await sendPaymentConfirmation(to, 'Student', subject.replace('🎉 Payment Confirmed - ', ''), 'simple-fallback');
+      const simpleResult = await sendSimplePaymentConfirmation(to, 'Student', subject.replace('🎉 Payment Confirmed - ', ''), 'simple-fallback');
       if (simpleResult.success) {
         console.log('Email sent successfully via simple service');
         return { success: true, messageId: simpleResult.messageId, method: 'simple' };
