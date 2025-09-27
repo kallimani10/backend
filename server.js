@@ -17,10 +17,22 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:4173',
     'https://zerokostcourses.netlify.app',
+    'https://zerokostcourses.netlify.app/',
   ],
   credentials: true
 }));
 app.use(express.json());
+
+// Check required environment variables
+const requiredEnvVars = ['MONGODB_URI', 'CASHFREE_APP_ID', 'CASHFREE_SECRET_KEY'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingVars);
+  console.error('Please set these in your Render environment variables');
+} else {
+  console.log('✅ All required environment variables are set');
+}
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
@@ -28,15 +40,36 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 })
 .then(() => {
-  console.log('Connected to MongoDB successfully!');
+  console.log('✅ Connected to MongoDB successfully!');
 })
 .catch((error) => {
-  console.error('MongoDB connection error:', error);
+  console.error('❌ MongoDB connection error:', error);
 });
 
 // Routes
 app.get('/', (req, res) => {
-  res.json({ message: 'Course Registration API is running!' });
+  res.json({ 
+    message: 'Course Registration API is running!',
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  const envStatus = {
+    MONGODB_URI: process.env.MONGODB_URI ? '✅ Set' : '❌ Missing',
+    CASHFREE_APP_ID: process.env.CASHFREE_APP_ID ? '✅ Set' : '❌ Missing',
+    CASHFREE_SECRET_KEY: process.env.CASHFREE_SECRET_KEY ? '✅ Set' : '❌ Missing',
+    CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'Using default',
+    PORT: process.env.PORT || 'Using default 5000'
+  };
+  
+  res.json({
+    status: 'healthy',
+    environment: envStatus,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Test email endpoint
