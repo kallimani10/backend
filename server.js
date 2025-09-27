@@ -223,7 +223,13 @@ app.post('/api/create-order', async (req, res) => {
       "Content-Type": "application/json"
     };
 
-    const cashfreeBase = process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg';
+    // Fix incorrect CASHFREE_BASE URL if it contains 'api.cashfree.com'
+    let cashfreeBase = process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg';
+    if (cashfreeBase.includes('api.cashfree.com')) {
+      cashfreeBase = 'https://sandbox.cashfree.com/pg';
+      console.log('Fixed incorrect CASHFREE_BASE URL to:', cashfreeBase);
+    }
+    
     console.log('Using Cashfree base URL:', cashfreeBase);
     console.log('Request payload:', JSON.stringify(payload, null, 2));
     console.log('Request headers:', JSON.stringify(headers, null, 2));
@@ -249,7 +255,11 @@ app.get('/api/order-status/:order_id', async (req, res) => {
       "x-client-secret": process.env.CASHFREE_SECRET_KEY,
       "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01'
     };
-    const resp = await axios.get(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders/${order_id}`, { headers });
+    let cashfreeBase = process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg';
+    if (cashfreeBase.includes('api.cashfree.com')) {
+      cashfreeBase = 'https://sandbox.cashfree.com/pg';
+    }
+    const resp = await axios.get(`${cashfreeBase}/orders/${order_id}`, { headers });
     res.json(resp.data);
   } catch (err) {
     console.error("Get order error:", err.response?.data || err.message);
@@ -320,7 +330,11 @@ app.post('/api/check-payment-status', async (req, res) => {
       "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01'
     };
     
-    const statusResp = await axios.get(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders/${orderId}`, { headers });
+    let cashfreeBase = process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg';
+    if (cashfreeBase.includes('api.cashfree.com')) {
+      cashfreeBase = 'https://sandbox.cashfree.com/pg';
+    }
+    const statusResp = await axios.get(`${cashfreeBase}/orders/${orderId}`, { headers });
     const orderStatus = statusResp.data?.order_status;
     
     console.log(`Order ${orderId} status: ${orderStatus}`);
