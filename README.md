@@ -9,15 +9,28 @@ This is the backend for the Course Registration application.
     npm install
     ```
 2.  **Configuration**:
-    Update `server/config.js` with your MongoDB URI and Cashfree credentials.
+    Create a `.env` file in the server directory with your credentials:
 
-    ```javascript
-    module.exports = {
-      // ... other config
-      MONGODB_URI: 'your_mongodb_uri',
-      CASHFREE_APP_ID: 'your_cashfree_app_id',
-      CASHFREE_SECRET_KEY: 'your_cashfree_secret_key'
-    };
+    ```env
+    # MongoDB Configuration
+    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority&appName=ClusterName
+
+    # Server Configuration
+    PORT=5000
+
+    # Cashfree Payment Gateway Configuration
+    CASHFREE_APP_ID=your_cashfree_app_id
+    CASHFREE_SECRET_KEY=your_cashfree_secret_key
+    CASHFREE_API_VERSION=2023-08-01
+    CASHFREE_BASE=https://sandbox.cashfree.com/pg
+
+    # Client Origin
+    CLIENT_ORIGIN=http://localhost:3000
+
+    # Email Configuration
+    EMAIL_USER=your_email@gmail.com
+    EMAIL_PASS=your_app_password
+    EMAIL_SERVICE=gmail
     ```
 
 3.  **Run Server**:
