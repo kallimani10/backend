@@ -57,6 +57,27 @@ app.get('/api/test-email', async (req, res) => {
   }
 });
 
+// Debug endpoint to check environment variables
+app.get('/api/debug-env', (req, res) => {
+  const envCheck = {
+    MONGODB_URI: process.env.MONGODB_URI ? 'Set' : 'Missing',
+    CASHFREE_APP_ID: process.env.CASHFREE_APP_ID ? 'Set' : 'Missing',
+    CASHFREE_SECRET_KEY: process.env.CASHFREE_SECRET_KEY ? 'Set' : 'Missing',
+    CASHFREE_API_VERSION: process.env.CASHFREE_API_VERSION || 'Using default',
+    CASHFREE_BASE: process.env.CASHFREE_BASE || 'Using default',
+    CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'Using default',
+    EMAIL_USER: process.env.EMAIL_USER ? 'Set' : 'Missing',
+    EMAIL_PASS: process.env.EMAIL_PASS ? 'Set' : 'Missing',
+    PORT: process.env.PORT || 'Using default 5000'
+  };
+  
+  res.json({
+    message: 'Environment variables check',
+    status: envCheck,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Send payment confirmation email endpoint
 app.post('/api/send-email', async (req, res) => {
   try {
