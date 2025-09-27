@@ -11,52 +11,16 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'http://localhost:4173',
-      'https://zerokostcourses.netlify.app',
-      'https://zerokostcourses.netlify.app/',
-      process.env.CLIENT_ORIGIN
-    ].filter(Boolean);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-client-id', 'x-client-secret', 'x-api-version']
+  origin: [
+    process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:4173',
+    'https://zerokostcourses.netlify.app',
+  ],
+  credentials: true
 }));
-
-// Handle preflight requests
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-client-id, x-client-secret, x-api-version');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.sendStatus(200);
-});
-
 app.use(express.json());
-
-// Check required environment variables
-const requiredEnvVars = ['MONGODB_URI', 'CASHFREE_APP_ID', 'CASHFREE_SECRET_KEY'];
-const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-
-if (missingVars.length > 0) {
-  console.error('❌ Missing required environment variables:', missingVars);
-  console.error('Please set these in your Render environment variables');
-} else {
-  console.log('✅ All required environment variables are set');
-}
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI, {
@@ -64,171 +28,15 @@ mongoose.connect(process.env.MONGODB_URI, {
   useUnifiedTopology: true,
 })
 .then(() => {
-  console.log('✅ Connected to MongoDB successfully!');
+  console.log('Connected to MongoDB successfully!');
 })
 .catch((error) => {
-  console.error('❌ MongoDB connection error:', error);
+  console.error('MongoDB connection error:', error);
 });
 
 // Routes
 app.get('/', (req, res) => {
-  res.json({ 
-    message: 'Course Registration API is running!',
-    status: 'healthy',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  const envStatus = {
-    MONGODB_URI: process.env.MONGODB_URI ? '✅ Set' : '❌ Missing',
-    CASHFREE_APP_ID: process.env.CASHFREE_APP_ID ? '✅ Set' : '❌ Missing',
-    CASHFREE_SECRET_KEY: process.env.CASHFREE_SECRET_KEY ? '✅ Set' : '❌ Missing',
-    CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'Using default',
-    PORT: process.env.PORT || 'Using default 5000'
-  };
-  
-  res.json({
-    status: 'healthy',
-    environment: envStatus,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Simple test endpoint to debug create-order
-app.get('/api/debug-create-order', async (req, res) => {
-  try {
-    console.log('🧪 Testing create-order with minimal payload...');
-    
-    const testPayload = {
-      order_id: "debug_" + Date.now(),
-      order_amount: 1,
-      order_currency: "INR",
-      customer_details: {
-        customer_id: "debug_cust",
-        customer_email: "debug@example.com",
-        customer_phone: "9999999999"
-      }
-    };
-
-    const headers = {
-      "x-client-id": process.env.CASHFREE_APP_ID,
-      "x-client-secret": process.env.CASHFREE_SECRET_KEY,
-      "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01',
-      "Content-Type": "application/json"
-    };
-
-    console.log('📤 Testing with payload:', JSON.stringify(testPayload, null, 2));
-    console.log('🔑 Using headers:', {
-      appId: process.env.CASHFREE_APP_ID ? 'Set' : 'Missing',
-      secretKey: process.env.CASHFREE_SECRET_KEY ? 'Set' : 'Missing',
-      apiVersion: process.env.CASHFREE_API_VERSION || '2023-08-01'
-    });
-
-    const resp = await axios.post(`${process.env.CASHFREE_BASE || 'https://sandbox.api.cashfree.com/pg'}/orders`, testPayload, { headers });
-    
-    console.log('✅ Cashfree response:', {
-      status: resp.status,
-      data: resp.data
-    });
-    
-    res.json({
-      status: 'success',
-      message: 'Debug test completed',
-      cashfreeResponse: resp.data,
-      hasPaymentSessionId: !!resp.data.payment_session_id,
-      hasPaymentUrl: !!resp.data.payment_url
-    });
-  } catch (err) {
-    console.error("❌ Debug test failed:", {
-      message: err.message,
-      status: err.response?.status,
-      data: err.response?.data
-    });
-    
-    res.status(500).json({
-      status: 'error',
-      message: 'Debug test failed',
-      error: err.response?.data || err.message,
-      details: {
-        status: err.response?.status,
-        statusText: err.response?.statusText
-      }
-    });
-  }
-});
-
-// Test Cashfree connection endpoint
-app.get('/api/test-cashfree', async (req, res) => {
-  try {
-    console.log('🧪 Testing Cashfree configuration...');
-    
-    const config = {
-      appId: process.env.CASHFREE_APP_ID,
-      secretKey: process.env.CASHFREE_SECRET_KEY,
-      apiVersion: process.env.CASHFREE_API_VERSION || '2023-08-01',
-      baseUrl: process.env.CASHFREE_BASE || 'https://sandbox.api.cashfree.com/pg'
-    };
-
-    console.log('🔑 Cashfree configuration:', {
-      appId: config.appId ? 'Set' : 'Missing',
-      secretKey: config.secretKey ? 'Set' : 'Missing',
-      apiVersion: config.apiVersion,
-      baseUrl: config.baseUrl
-    });
-
-    // Check if credentials are properly formatted
-    const issues = [];
-    
-    if (!config.appId) {
-      issues.push('CASHFREE_APP_ID is missing');
-    }
-    
-    if (!config.secretKey) {
-      issues.push('CASHFREE_SECRET_KEY is missing');
-    }
-    
-    if (config.appId && !config.appId.startsWith('TEST') && !config.appId.startsWith('1079')) {
-      issues.push('CASHFREE_APP_ID format looks incorrect (should start with TEST or 1079 for test API)');
-    }
-    
-    if (config.secretKey && !config.secretKey.startsWith('cfsk_')) {
-      issues.push('CASHFREE_SECRET_KEY format looks incorrect (should start with cfsk_ for test API)');
-    }
-    
-    if (issues.length > 0) {
-      res.status(400).json({
-        status: 'error',
-        message: 'Cashfree configuration issues found',
-        issues: issues,
-        config: {
-          appId: config.appId ? config.appId.substring(0, 10) + '...' : 'Missing',
-          secretKey: config.secretKey ? config.secretKey.substring(0, 10) + '...' : 'Missing',
-          apiVersion: config.apiVersion,
-          baseUrl: config.baseUrl
-        }
-      });
-    } else {
-      res.json({
-        status: 'success',
-        message: 'Cashfree configuration looks correct',
-        config: {
-          appId: config.appId ? config.appId.substring(0, 10) + '...' : 'Missing',
-          secretKey: config.secretKey ? config.secretKey.substring(0, 10) + '...' : 'Missing',
-          apiVersion: config.apiVersion,
-          baseUrl: config.baseUrl
-        }
-      });
-    }
-  } catch (err) {
-    console.error("❌ Cashfree test failed:", err);
-    res.status(500).json({
-      status: 'error',
-      message: 'Cashfree test failed',
-      error: err.message
-    });
-  }
+  res.json({ message: 'Course Registration API is running!' });
 });
 
 // Test email endpoint
@@ -358,12 +166,9 @@ app.get('/api/registrations', async (req, res) => {
 // Create Cashfree payment order
 app.post('/api/create-order', async (req, res) => {
   try {
-    console.log('📝 Create order request received:', req.body);
-    
     const { amount, email, phone, courseData } = req.body;
 
     const orderId = "order_" + Date.now();
-    console.log('🆔 Generated order ID:', orderId);
 
     const payload = {
       order_id: orderId,
@@ -375,12 +180,10 @@ app.post('/api/create-order', async (req, res) => {
         customer_phone: phone || "9999999999"
       },
       order_meta: {
-        return_url: `${process.env.CLIENT_ORIGIN || 'https://zerokostcourses.netlify.app'}/return?order_id={order_id}`,
+        return_url: `${process.env.CLIENT_ORIGIN || 'http://localhost:3000'}/return?order_id={order_id}`,
         course_data: courseData || {}
       }
     };
-
-    console.log('📦 Payload being sent to Cashfree:', JSON.stringify(payload, null, 2));
 
     const headers = {
       "x-client-id": process.env.CASHFREE_APP_ID,
@@ -389,42 +192,11 @@ app.post('/api/create-order', async (req, res) => {
       "Content-Type": "application/json"
     };
 
-    console.log('🔑 Using Cashfree credentials:', {
-      appId: process.env.CASHFREE_APP_ID ? 'Set' : 'Missing',
-      secretKey: process.env.CASHFREE_SECRET_KEY ? 'Set' : 'Missing',
-      baseUrl: process.env.CASHFREE_BASE || 'https://sandbox.api.cashfree.com/pg'
-    });
-
-    console.log('📤 Sending request to Cashfree...');
-    const resp = await axios.post(`${process.env.CASHFREE_BASE || 'https://sandbox.api.cashfree.com/pg'}/orders`, payload, { headers });
-    console.log('✅ Cashfree response received:', resp.status);
-    console.log('📋 Cashfree response data:', JSON.stringify(resp.data, null, 2));
-    
-    // Handle the response properly
-    const responseData = {
-      order_id: orderId,
-      ...resp.data
-    };
-    
-    // Ensure we have the payment_session_id for the frontend
-    if (resp.data.payment_session_id) {
-      responseData.payment_session_id = resp.data.payment_session_id;
-    }
-    
-    console.log('📤 Sending response to frontend:', JSON.stringify(responseData, null, 2));
-    res.json(responseData);
+    const resp = await axios.post(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders`, payload, { headers });
+    res.json({ ...resp.data, order_id: orderId });
   } catch (err) {
-    console.error("❌ Create order error:", {
-      message: err.message,
-      status: err.response?.status,
-      statusText: err.response?.statusText,
-      data: err.response?.data,
-      stack: err.stack
-    });
-    res.status(500).json({ 
-      error: err.response?.data || err.message,
-      details: 'Check server logs for more information'
-    });
+    console.error("Create order error:", err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data || err.message });
   }
 });
 
@@ -437,7 +209,7 @@ app.get('/api/order-status/:order_id', async (req, res) => {
       "x-client-secret": process.env.CASHFREE_SECRET_KEY,
       "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01'
     };
-    const resp = await axios.get(`${process.env.CASHFREE_BASE || 'https://sandbox.api.cashfree.com/pg'}/orders/${order_id}`, { headers });
+    const resp = await axios.get(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders/${order_id}`, { headers });
     res.json(resp.data);
   } catch (err) {
     console.error("Get order error:", err.response?.data || err.message);
@@ -508,7 +280,7 @@ app.post('/api/check-payment-status', async (req, res) => {
       "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01'
     };
     
-    const statusResp = await axios.get(`${process.env.CASHFREE_BASE || 'https://sandbox.api.cashfree.com/pg'}/orders/${orderId}`, { headers });
+    const statusResp = await axios.get(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders/${orderId}`, { headers });
     const orderStatus = statusResp.data?.order_status;
     
     console.log(`Order ${orderId} status: ${orderStatus}`);
