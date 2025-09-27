@@ -166,6 +166,14 @@ app.get('/api/registrations', async (req, res) => {
 // Create Cashfree payment order
 app.post('/api/create-order', async (req, res) => {
   try {
+    // Check if required environment variables are set
+    if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
+      console.error("Missing Cashfree credentials in environment variables");
+      return res.status(500).json({ 
+        error: "Server configuration error: Missing Cashfree credentials" 
+      });
+    }
+
     const { amount, email, phone, courseData } = req.body;
 
     const orderId = "order_" + Date.now();
@@ -196,7 +204,11 @@ app.post('/api/create-order', async (req, res) => {
     res.json({ ...resp.data, order_id: orderId });
   } catch (err) {
     console.error("Create order error:", err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    console.error("Full error:", err);
+    res.status(500).json({ 
+      error: err.response?.data || err.message,
+      details: "Check server logs for more information"
+    });
   }
 });
 
