@@ -4,8 +4,7 @@ const cors = require('cors');
 const axios = require('axios');
 require('dotenv').config();
 const Registration = require('./models/Registration');
-const { sendEmail, sendPaymentConfirmation, sendTestEmail } = require('./services/emailService');
-const { sendPaymentConfirmation: sendSimplePaymentConfirmation } = require('./services/simpleEmailService');
+const { sendPaymentConfirmation, sendTestEmail } = require('./services/resendEmailService');
 
 const app = express();
 
@@ -39,19 +38,19 @@ app.get('/', (req, res) => {
   res.json({ message: 'Course Registration API is running!' });
 });
 
-// Test email endpoint
+// Test Resend email endpoint
 app.get('/api/test-email', async (req, res) => {
   try {
-    console.log('Testing email functionality...');
+    console.log('Testing Resend email functionality...');
     const result = await sendTestEmail();
     res.json({ 
-      message: 'Email test completed',
+      message: 'Resend email test completed',
       result: result
     });
   } catch (error) {
-    console.error('Email test error:', error);
+    console.error('Resend email test error:', error);
     res.status(500).json({ 
-      error: 'Email test failed',
+      error: 'Resend email test failed',
       details: error.message
     });
   }
@@ -66,10 +65,8 @@ app.get('/api/debug-env', (req, res) => {
     CASHFREE_API_VERSION: process.env.CASHFREE_API_VERSION || 'Using default',
     CASHFREE_BASE: process.env.CASHFREE_BASE || 'Using default',
     CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'Using default',
-    EMAIL_USER: process.env.EMAIL_USER ? 'Set' : 'Missing',
-    EMAIL_PASS: process.env.EMAIL_PASS ? 'Set' : 'Missing',
-    GMAIL_USER: process.env.GMAIL_USER ? 'Set' : 'Missing',
-    GMAIL_PASS: process.env.GMAIL_PASS ? 'Set' : 'Missing',
+    RESEND_API_KEY: process.env.RESEND_API_KEY ? 'Set' : 'Missing',
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'Using default',
     PORT: process.env.PORT || 'Using default 5000'
   };
   
@@ -80,7 +77,7 @@ app.get('/api/debug-env', (req, res) => {
   });
 });
 
-// Send payment confirmation email endpoint
+// Send payment confirmation email via Resend
 app.post('/api/send-email', async (req, res) => {
   try {
     const { email, name, course, orderId } = req.body;
@@ -89,42 +86,17 @@ app.post('/api/send-email', async (req, res) => {
       return res.status(400).json({ error: 'Email, name, and course are required' });
     }
 
-    console.log('Sending payment confirmation email to:', email);
+    console.log('Sending payment confirmation email via Resend to:', email);
     const result = await sendPaymentConfirmation(email, name, course, orderId);
     
     res.json({
-      message: 'Payment confirmation email sent',
+      message: 'Resend email sent',
       result: result
     });
   } catch (error) {
-    console.error('Email error:', error);
+    console.error('Resend email error:', error);
     res.status(500).json({
-      error: 'Email failed',
-      details: error.message
-    });
-  }
-});
-
-// Send email via simple service (bypasses SMTP blocking)
-app.post('/api/send-simple-email', async (req, res) => {
-  try {
-    const { email, name, course, orderId } = req.body;
-    
-    if (!email || !name || !course) {
-      return res.status(400).json({ error: 'Email, name, and course are required' });
-    }
-
-    console.log('Sending email via simple service to:', email);
-    const result = await sendSimplePaymentConfirmation(email, name, course, orderId);
-    
-    res.json({
-      message: 'Simple email sent',
-      result: result
-    });
-  } catch (error) {
-    console.error('Simple email error:', error);
-    res.status(500).json({
-      error: 'Simple email failed',
+      error: 'Resend email failed',
       details: error.message
     });
   }
