@@ -6,8 +6,8 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS
+    user: 'nareshkallimani09@gmail.com',
+    pass: 'fese fuxd gdyp qccx'
   },
   tls: {
     rejectUnauthorized: false
@@ -30,7 +30,7 @@ async function sendPaymentConfirmation(email, name, course, orderId) {
       console.log(`Sending payment confirmation email via Gmail to: ${email} (attempt ${attempt}/${maxRetries})`);
       
       const mailOptions = {
-        from: process.env.GMAIL_USER,
+        from: 'nareshkallimani09@gmail.com',
         to: email,
         subject: `Payment Confirmation - ${course}`,
         html: `
