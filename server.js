@@ -20,6 +20,7 @@ app.use(cors({
       'http://localhost:5173',
       'http://localhost:4173',
       'https://zerokostcourses.netlify.app',
+      'https://zerokostcourses.netlify.app/',
       process.env.CLIENT_ORIGIN
     ].filter(Boolean);
     
@@ -93,6 +94,69 @@ app.get('/api/health', (req, res) => {
     environment: envStatus,
     timestamp: new Date().toISOString()
   });
+});
+
+// Simple test endpoint to debug create-order
+app.get('/api/debug-create-order', async (req, res) => {
+  try {
+    console.log('🧪 Testing create-order with minimal payload...');
+    
+    const testPayload = {
+      order_id: "debug_" + Date.now(),
+      order_amount: 1,
+      order_currency: "INR",
+      customer_details: {
+        customer_id: "debug_cust",
+        customer_email: "debug@example.com",
+        customer_phone: "9999999999"
+      }
+    };
+
+    const headers = {
+      "x-client-id": process.env.CASHFREE_APP_ID,
+      "x-client-secret": process.env.CASHFREE_SECRET_KEY,
+      "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01',
+      "Content-Type": "application/json"
+    };
+
+    console.log('📤 Testing with payload:', JSON.stringify(testPayload, null, 2));
+    console.log('🔑 Using headers:', {
+      appId: process.env.CASHFREE_APP_ID ? 'Set' : 'Missing',
+      secretKey: process.env.CASHFREE_SECRET_KEY ? 'Set' : 'Missing',
+      apiVersion: process.env.CASHFREE_API_VERSION || '2023-08-01'
+    });
+
+    const resp = await axios.post(`${process.env.CASHFREE_BASE || 'https://api.cashfree.com/pg'}/orders`, testPayload, { headers });
+    
+    console.log('✅ Cashfree response:', {
+      status: resp.status,
+      data: resp.data
+    });
+    
+    res.json({
+      status: 'success',
+      message: 'Debug test completed',
+      cashfreeResponse: resp.data,
+      hasPaymentSessionId: !!resp.data.payment_session_id,
+      hasPaymentUrl: !!resp.data.payment_url
+    });
+  } catch (err) {
+    console.error("❌ Debug test failed:", {
+      message: err.message,
+      status: err.response?.status,
+      data: err.response?.data
+    });
+    
+    res.status(500).json({
+      status: 'error',
+      message: 'Debug test failed',
+      error: err.response?.data || err.message,
+      details: {
+        status: err.response?.status,
+        statusText: err.response?.statusText
+      }
+    });
+  }
 });
 
 // Test Cashfree connection endpoint
