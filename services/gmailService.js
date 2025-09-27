@@ -1,20 +1,23 @@
 const nodemailer = require('nodemailer');
 
-// Create Gmail transporter with timeout and retry settings
+// Create Gmail transporter with explicit SMTP settings
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS
   },
-  connectionTimeout: 60000, // 60 seconds
-  greetingTimeout: 30000,   // 30 seconds
-  socketTimeout: 60000,      // 60 seconds
-  pool: true,
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 30000, // 30 seconds
+  greetingTimeout: 15000,   // 15 seconds
+  socketTimeout: 30000,     // 30 seconds
+  pool: false,
   maxConnections: 1,
-  maxMessages: 3,
-  rateDelta: 20000,         // 20 seconds
-  rateLimit: 5
+  maxMessages: 1
 });
 
 // Send payment confirmation email via Gmail with retry logic
@@ -75,7 +78,20 @@ async function sendPaymentConfirmation(email, name, course, orderId) {
   }
 
   console.error('Gmail email service failed after all retries:', lastError);
-  return { success: false, error: lastError.message };
+  
+  // Fallback: Log email details for manual sending
+  console.log('=== EMAIL FALLBACK LOG ===');
+  console.log('To:', email);
+  console.log('Subject: Payment Confirmation -', course);
+  console.log('Name:', name);
+  console.log('Order ID:', orderId);
+  console.log('========================');
+  
+  return { 
+    success: false, 
+    error: lastError.message,
+    fallback: 'Email details logged for manual sending'
+  };
 }
 
 module.exports = {
