@@ -199,9 +199,12 @@ app.get('/api/registrations', async (req, res) => {
 // Create Cashfree payment order
 app.post('/api/create-order', async (req, res) => {
   try {
+    console.log('📝 Create order request received:', req.body);
+    
     const { amount, email, phone, courseData } = req.body;
 
     const orderId = "order_" + Date.now();
+    console.log('🆔 Generated order ID:', orderId);
 
     const payload = {
       order_id: orderId,
@@ -225,11 +228,29 @@ app.post('/api/create-order', async (req, res) => {
       "Content-Type": "application/json"
     };
 
+    console.log('🔑 Using Cashfree credentials:', {
+      appId: process.env.CASHFREE_APP_ID ? 'Set' : 'Missing',
+      secretKey: process.env.CASHFREE_SECRET_KEY ? 'Set' : 'Missing',
+      baseUrl: process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'
+    });
+
+    console.log('📤 Sending request to Cashfree...');
     const resp = await axios.post(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders`, payload, { headers });
+    console.log('✅ Cashfree response received:', resp.status);
+    
     res.json({ ...resp.data, order_id: orderId });
   } catch (err) {
-    console.error("Create order error:", err.response?.data || err.message);
-    res.status(500).json({ error: err.response?.data || err.message });
+    console.error("❌ Create order error:", {
+      message: err.message,
+      status: err.response?.status,
+      statusText: err.response?.statusText,
+      data: err.response?.data,
+      stack: err.stack
+    });
+    res.status(500).json({ 
+      error: err.response?.data || err.message,
+      details: 'Check server logs for more information'
+    });
   }
 });
 
