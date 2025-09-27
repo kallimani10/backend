@@ -75,49 +75,71 @@ app.get('/api/health', (req, res) => {
 // Test Cashfree connection endpoint
 app.get('/api/test-cashfree', async (req, res) => {
   try {
-    console.log('🧪 Testing Cashfree connection...');
+    console.log('🧪 Testing Cashfree configuration...');
     
-    const headers = {
-      "x-client-id": process.env.CASHFREE_APP_ID,
-      "x-client-secret": process.env.CASHFREE_SECRET_KEY,
-      "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01',
-      "Content-Type": "application/json"
+    const config = {
+      appId: process.env.CASHFREE_APP_ID,
+      secretKey: process.env.CASHFREE_SECRET_KEY,
+      apiVersion: process.env.CASHFREE_API_VERSION || '2023-08-01',
+      baseUrl: process.env.CASHFREE_BASE || 'https://api.cashfree.com/pg'
     };
 
-    console.log('🔑 Cashfree credentials:', {
-      appId: process.env.CASHFREE_APP_ID ? 'Set' : 'Missing',
-      secretKey: process.env.CASHFREE_SECRET_KEY ? 'Set' : 'Missing',
-      baseUrl: process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'
+    console.log('🔑 Cashfree configuration:', {
+      appId: config.appId ? 'Set' : 'Missing',
+      secretKey: config.secretKey ? 'Set' : 'Missing',
+      apiVersion: config.apiVersion,
+      baseUrl: config.baseUrl
     });
 
-    // Test with a simple GET request to Cashfree
-    const testUrl = `${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders`;
-    console.log('📤 Testing URL:', testUrl);
+    // Check if credentials are properly formatted
+    const issues = [];
     
-    const resp = await axios.get(testUrl, { headers });
-    console.log('✅ Cashfree test successful:', resp.status);
+    if (!config.appId) {
+      issues.push('CASHFREE_APP_ID is missing');
+    }
     
-    res.json({
-      status: 'success',
-      message: 'Cashfree connection test passed',
-      response: resp.data
-    });
+    if (!config.secretKey) {
+      issues.push('CASHFREE_SECRET_KEY is missing');
+    }
+    
+    if (config.appId && !config.appId.startsWith('TEST') && !config.appId.startsWith('1079') && !config.appId.startsWith('CF')) {
+      issues.push('CASHFREE_APP_ID format looks incorrect (should start with TEST, 1079, or CF)');
+    }
+    
+    if (config.secretKey && !config.secretKey.startsWith('cfsk_') && !config.secretKey.startsWith('CF')) {
+      issues.push('CASHFREE_SECRET_KEY format looks incorrect (should start with cfsk_ or CF)');
+    }
+    
+    if (issues.length > 0) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Cashfree configuration issues found',
+        issues: issues,
+        config: {
+          appId: config.appId ? config.appId.substring(0, 10) + '...' : 'Missing',
+          secretKey: config.secretKey ? config.secretKey.substring(0, 10) + '...' : 'Missing',
+          apiVersion: config.apiVersion,
+          baseUrl: config.baseUrl
+        }
+      });
+    } else {
+      res.json({
+        status: 'success',
+        message: 'Cashfree configuration looks correct',
+        config: {
+          appId: config.appId ? config.appId.substring(0, 10) + '...' : 'Missing',
+          secretKey: config.secretKey ? config.secretKey.substring(0, 10) + '...' : 'Missing',
+          apiVersion: config.apiVersion,
+          baseUrl: config.baseUrl
+        }
+      });
+    }
   } catch (err) {
-    console.error("❌ Cashfree test failed:", {
-      message: err.message,
-      status: err.response?.status,
-      statusText: err.response?.statusText,
-      data: err.response?.data
-    });
-    
+    console.error("❌ Cashfree test failed:", err);
     res.status(500).json({
       status: 'error',
-      message: 'Cashfree connection test failed',
-      error: err.response?.data || err.message,
-      details: {
-        status: err.response?.status,
-        statusText: err.response?.statusText
-      }
+      message: 'Cashfree test failed',
+      error: err.message
     });
   }
 });
@@ -281,11 +303,11 @@ app.post('/api/create-order', async (req, res) => {
     console.log('🔑 Using Cashfree credentials:', {
       appId: process.env.CASHFREE_APP_ID ? 'Set' : 'Missing',
       secretKey: process.env.CASHFREE_SECRET_KEY ? 'Set' : 'Missing',
-      baseUrl: process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'
+      baseUrl: process.env.CASHFREE_BASE || 'https://api.cashfree.com/pg'
     });
 
     console.log('📤 Sending request to Cashfree...');
-    const resp = await axios.post(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders`, payload, { headers });
+    const resp = await axios.post(`${process.env.CASHFREE_BASE || 'https://api.cashfree.com/pg'}/orders`, payload, { headers });
     console.log('✅ Cashfree response received:', resp.status);
     
     res.json({ ...resp.data, order_id: orderId });
@@ -313,7 +335,7 @@ app.get('/api/order-status/:order_id', async (req, res) => {
       "x-client-secret": process.env.CASHFREE_SECRET_KEY,
       "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01'
     };
-    const resp = await axios.get(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders/${order_id}`, { headers });
+    const resp = await axios.get(`${process.env.CASHFREE_BASE || 'https://api.cashfree.com/pg'}/orders/${order_id}`, { headers });
     res.json(resp.data);
   } catch (err) {
     console.error("Get order error:", err.response?.data || err.message);
@@ -384,7 +406,7 @@ app.post('/api/check-payment-status', async (req, res) => {
       "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01'
     };
     
-    const statusResp = await axios.get(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders/${orderId}`, { headers });
+    const statusResp = await axios.get(`${process.env.CASHFREE_BASE || 'https://api.cashfree.com/pg'}/orders/${orderId}`, { headers });
     const orderStatus = statusResp.data?.order_status;
     
     console.log(`Order ${orderId} status: ${orderStatus}`);
