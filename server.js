@@ -4,7 +4,7 @@ const cors = require('cors');
 const axios = require('axios');
 require('dotenv').config();
 const Registration = require('./models/Registration');
-const { sendPaymentConfirmation, sendTestEmail } = require('./services/resendEmailService');
+const { sendPaymentConfirmation } = require('./services/gmailService');
 
 const app = express();
 
@@ -38,23 +38,6 @@ app.get('/', (req, res) => {
   res.json({ message: 'Course Registration API is running!' });
 });
 
-// Test Resend email endpoint
-app.get('/api/test-email', async (req, res) => {
-  try {
-    console.log('Testing Resend email functionality...');
-    const result = await sendTestEmail();
-    res.json({ 
-      message: 'Resend email test completed',
-      result: result
-    });
-  } catch (error) {
-    console.error('Resend email test error:', error);
-    res.status(500).json({ 
-      error: 'Resend email test failed',
-      details: error.message
-    });
-  }
-});
 
 // Debug endpoint to check environment variables
 app.get('/api/debug-env', (req, res) => {
@@ -65,7 +48,8 @@ app.get('/api/debug-env', (req, res) => {
     CASHFREE_API_VERSION: process.env.CASHFREE_API_VERSION || 'Using default',
     CASHFREE_BASE: process.env.CASHFREE_BASE || 'Using default',
     CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'Using default',
-    RESEND_API_KEY: process.env.RESEND_API_KEY ? 'Set' : 'Missing',
+    GMAIL_USER: process.env.GMAIL_USER ? 'Set' : 'Missing',
+    GMAIL_PASS: process.env.GMAIL_PASS ? 'Set' : 'Missing',
     PORT: process.env.PORT || 'Using default 5000'
   };
   
@@ -76,7 +60,7 @@ app.get('/api/debug-env', (req, res) => {
   });
 });
 
-// Send payment confirmation email via Resend
+// Send payment confirmation email via Gmail
 app.post('/api/send-email', async (req, res) => {
   try {
     const { email, name, course, orderId } = req.body;
@@ -85,17 +69,17 @@ app.post('/api/send-email', async (req, res) => {
       return res.status(400).json({ error: 'Email, name, and course are required' });
     }
 
-    console.log('Sending payment confirmation email via Resend to:', email);
+    console.log('Sending payment confirmation email via Gmail to:', email);
     const result = await sendPaymentConfirmation(email, name, course, orderId);
     
     res.json({
-      message: 'Resend email sent',
+      message: 'Gmail email sent',
       result: result
     });
   } catch (error) {
-    console.error('Resend email error:', error);
+    console.error('Gmail email error:', error);
     res.status(500).json({
-      error: 'Resend email failed',
+      error: 'Gmail email failed',
       details: error.message
     });
   }
