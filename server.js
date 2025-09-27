@@ -11,16 +11,39 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: [
-    process.env.CLIENT_ORIGIN || 'http://localhost:3000',
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:4173',
-    'https://zerokostcourses.netlify.app',
-    'https://zerokostcourses.netlify.app/',
-  ],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5173',
+      'http://localhost:4173',
+      'https://zerokostcourses.netlify.app',
+      process.env.CLIENT_ORIGIN
+    ].filter(Boolean);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-client-id', 'x-client-secret', 'x-api-version']
 }));
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-client-id, x-client-secret, x-api-version');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.sendStatus(200);
+});
+
 app.use(express.json());
 
 // Check required environment variables
@@ -288,7 +311,7 @@ app.post('/api/create-order', async (req, res) => {
         customer_phone: phone || "9999999999"
       },
       order_meta: {
-        return_url: `${process.env.CLIENT_ORIGIN || 'http://localhost:3000'}/return?order_id={order_id}`,
+        return_url: `${process.env.CLIENT_ORIGIN || 'https://zerokostcourses.netlify.app'}/return?order_id={order_id}`,
         course_data: courseData || {}
       }
     };
