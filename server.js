@@ -68,6 +68,8 @@ app.get('/api/debug-env', (req, res) => {
     CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'Using default',
     EMAIL_USER: process.env.EMAIL_USER ? 'Set' : 'Missing',
     EMAIL_PASS: process.env.EMAIL_PASS ? 'Set' : 'Missing',
+    GMAIL_USER: process.env.GMAIL_USER ? 'Set' : 'Missing',
+    GMAIL_PASS: process.env.GMAIL_PASS ? 'Set' : 'Missing',
     PORT: process.env.PORT || 'Using default 5000'
   };
   
@@ -221,7 +223,12 @@ app.post('/api/create-order', async (req, res) => {
       "Content-Type": "application/json"
     };
 
-    const resp = await axios.post(`${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders`, payload, { headers });
+    const cashfreeBase = process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg';
+    console.log('Using Cashfree base URL:', cashfreeBase);
+    console.log('Request payload:', JSON.stringify(payload, null, 2));
+    console.log('Request headers:', JSON.stringify(headers, null, 2));
+    
+    const resp = await axios.post(`${cashfreeBase}/orders`, payload, { headers });
     res.json({ ...resp.data, order_id: orderId });
   } catch (err) {
     console.error("Create order error:", err.response?.data || err.message);
