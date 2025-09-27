@@ -72,6 +72,56 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Test Cashfree connection endpoint
+app.get('/api/test-cashfree', async (req, res) => {
+  try {
+    console.log('🧪 Testing Cashfree connection...');
+    
+    const headers = {
+      "x-client-id": process.env.CASHFREE_APP_ID,
+      "x-client-secret": process.env.CASHFREE_SECRET_KEY,
+      "x-api-version": process.env.CASHFREE_API_VERSION || '2023-08-01',
+      "Content-Type": "application/json"
+    };
+
+    console.log('🔑 Cashfree credentials:', {
+      appId: process.env.CASHFREE_APP_ID ? 'Set' : 'Missing',
+      secretKey: process.env.CASHFREE_SECRET_KEY ? 'Set' : 'Missing',
+      baseUrl: process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'
+    });
+
+    // Test with a simple GET request to Cashfree
+    const testUrl = `${process.env.CASHFREE_BASE || 'https://sandbox.cashfree.com/pg'}/orders`;
+    console.log('📤 Testing URL:', testUrl);
+    
+    const resp = await axios.get(testUrl, { headers });
+    console.log('✅ Cashfree test successful:', resp.status);
+    
+    res.json({
+      status: 'success',
+      message: 'Cashfree connection test passed',
+      response: resp.data
+    });
+  } catch (err) {
+    console.error("❌ Cashfree test failed:", {
+      message: err.message,
+      status: err.response?.status,
+      statusText: err.response?.statusText,
+      data: err.response?.data
+    });
+    
+    res.status(500).json({
+      status: 'error',
+      message: 'Cashfree connection test failed',
+      error: err.response?.data || err.message,
+      details: {
+        status: err.response?.status,
+        statusText: err.response?.statusText
+      }
+    });
+  }
+});
+
 // Test email endpoint
 app.get('/api/test-email', async (req, res) => {
   try {
