@@ -66,7 +66,6 @@ app.get('/api/debug-env', (req, res) => {
     CASHFREE_BASE: process.env.CASHFREE_BASE || 'Using default',
     CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'Using default',
     RESEND_API_KEY: process.env.RESEND_API_KEY ? 'Set' : 'Missing',
-    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL || 'Using default',
     PORT: process.env.PORT || 'Using default 5000'
   };
   

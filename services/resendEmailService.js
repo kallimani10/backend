@@ -8,7 +8,7 @@ async function sendPaymentConfirmation(email, name, course, orderId) {
     console.log(`Sending payment confirmation email via Resend to: ${email}`);
     
     const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'nareshkallimani09@gmail.com',
+      from: 'ZeroKost Courses <onboarding@resend.dev>',
       to: [email],
       subject: `Payment Confirmation - ${course}`,
       html: `
@@ -59,7 +59,7 @@ async function sendTestEmail() {
     console.log('Sending test email via Resend...');
     
     const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'nareshkallimani09@gmail.com',
+      from: 'ZeroKost Courses <onboarding@resend.dev>',
       to: [process.env.RESEND_FROM_EMAIL || 'nareshkallimani09@gmail.com'],
       subject: 'Test Email from ZeroKost Courses',
       html: `
