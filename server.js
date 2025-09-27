@@ -316,6 +316,8 @@ app.post('/api/create-order', async (req, res) => {
       }
     };
 
+    console.log('📦 Payload being sent to Cashfree:', JSON.stringify(payload, null, 2));
+
     const headers = {
       "x-client-id": process.env.CASHFREE_APP_ID,
       "x-client-secret": process.env.CASHFREE_SECRET_KEY,
@@ -332,8 +334,21 @@ app.post('/api/create-order', async (req, res) => {
     console.log('📤 Sending request to Cashfree...');
     const resp = await axios.post(`${process.env.CASHFREE_BASE || 'https://api.cashfree.com/pg'}/orders`, payload, { headers });
     console.log('✅ Cashfree response received:', resp.status);
+    console.log('📋 Cashfree response data:', JSON.stringify(resp.data, null, 2));
     
-    res.json({ ...resp.data, order_id: orderId });
+    // Handle the response properly
+    const responseData = {
+      order_id: orderId,
+      ...resp.data
+    };
+    
+    // Ensure we have the payment_session_id for the frontend
+    if (resp.data.payment_session_id) {
+      responseData.payment_session_id = resp.data.payment_session_id;
+    }
+    
+    console.log('📤 Sending response to frontend:', JSON.stringify(responseData, null, 2));
+    res.json(responseData);
   } catch (err) {
     console.error("❌ Create order error:", {
       message: err.message,
